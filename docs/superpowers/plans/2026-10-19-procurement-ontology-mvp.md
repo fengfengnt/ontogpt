@@ -144,10 +144,10 @@
 
 **Interfaces:** `ExtractionRun.unmapped_suggestions` 保留模型从资料或用户陈述中发现的未映射信息；`detect_gap(binding, source_span, proposed_field_or_relation) -> SchemaGap`；`draft_additive_schema(gap, draft_worktree) -> DraftArtifacts` 验证该工作树处于待审 schema 草案分支，只向新版本目录写 YAML，并用 LinkML 生成 Python；不修改当前版本、注册表部署项或 SQLite 指针。
 
-- [ ] 写 `test_new_relation_generates_draft`、`test_rename_or_type_change_is_rejected`、`test_wrong_git_branch_is_rejected`：资料触发的建议生成企业专属可解析 `v2` YAML/Python，`v1` 哈希和启用指针不变；删除/重命名/跨企业关系及错误工作树拒绝。
-- [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_schema_draft.py -q`，期望失败。
-- [ ] 实现自然语言/资料触发的缺口记录、仅增加字段/关系的确定性约束和草案生成；文档写明 Git 审阅、测试、部署与 `activate-schema` 的分界。
-- [ ] 重跑测试，期望通过；提交本任务文件。
+- [x] 写新增关系、危险修订/路径/类型、错误工作树、来源和基础摘要、模型建议生成草案记录测试。
+- [x] 初始 9 项因模块缺失失败；自动草案服务和提取回调测试分别观察到失败。
+- [x] 实现自然语言/资料触发、只增加字段/关系的约束与独立工作树生成；文档明确 Git 审阅、测试、部署和显式激活分界。
+- [x] 草案测试 10 项通过，提取自动缺口回调通过；含真实 Fuseki 的服务全套 80 项通过，未执行真实模型调用。
 
 ### Task 10: 管理 JSON API 与 MCP 查询工具
 

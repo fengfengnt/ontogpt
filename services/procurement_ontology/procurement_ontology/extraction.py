@@ -87,8 +87,9 @@ def normalize_candidates(binding, source, run, extracted, category_id):
 
 
 class ExtractionService:
-    def __init__(self, store, catalog, client_factory=configured_client):
+    def __init__(self, store, catalog, client_factory=configured_client, gap_handler=None):
         self.store, self.catalog, self.client_factory = store, catalog, client_factory
+        self.gap_handler = gap_handler
         self._lock = threading.Lock()
 
     def extract(self, identity: Identity, revision_id: str, category_key: str) -> ExtractionRun:
@@ -130,6 +131,13 @@ class ExtractionService:
                 candidates, run.unmapped_suggestions = normalize_candidates(binding, source, run, extracted, category_id)
                 self.store.append_candidates(identity.scope_id, run.batch_id, candidates)
                 run.candidate_ids = [candidate.id for candidate in candidates]
+                if self.gap_handler:
+                    for suggestion in run.unmapped_suggestions:
+                        try:
+                            draft = self.gap_handler(identity, binding, source, suggestion)
+                            suggestion.update(draft_id=draft["id"], draft_status=draft["status"])
+                        except Exception as error:
+                            suggestion["draft_error"] = type(error).__name__
                 run.status = "SUCCEEDED"
             except Exception as error:
                 run.status, run.error_code = "FAILED", type(error).__name__

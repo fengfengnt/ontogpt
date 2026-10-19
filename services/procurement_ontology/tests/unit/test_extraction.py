@@ -208,3 +208,21 @@ def test_relation_endpoints_resolve_only_within_the_run():
     assert relations[0].status == "PENDING_REVIEW"
     assert relations[1].status == "MODEL_SUGGESTION"
     assert relations[1].item.object_id.startswith("unresolved:")
+
+
+def test_anchored_schema_gap_is_drafted_without_activating():
+    intake, extractor, store, _ = services(Client({"unmapped_suggestions": [{
+        "statement": "原厂上门", "evidence_quote": "原厂上门", "proposed_relation": "支持上门服务",
+    }]}))
+    calls = []
+
+    def handler(identity, binding, source, suggestion):
+        calls.append((identity.scope_id, binding.version, suggestion["source_spans"][0]["quote"]))
+        return {"id": "gap-test", "status": "DRAFT"}
+
+    extractor.gap_handler = handler
+    revision = intake.submit(BUYER, "原厂上门", simulated=True)
+    run = extractor.extract(BUYER, revision.id, "computer")
+    assert calls == [("test_buyer1", "v1", "原厂上门")]
+    assert run.unmapped_suggestions[0]["draft_id"] == "gap-test"
+    assert run.schema_version == "v1"

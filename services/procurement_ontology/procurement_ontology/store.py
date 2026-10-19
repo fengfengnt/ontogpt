@@ -151,6 +151,20 @@ class FusekiStore:
         rows = self._query(scope_id, f"SELECT ?payload WHERE {{ GRAPH ?graph {{ ?graph a {NS.ChangeBatch.n3()}; {NS.latest_event.n3()} ?event. ?event {NS.payload.n3()} ?payload }} }}")["results"]["bindings"]
         return [ChangeBatch.model_validate_json(row["payload"]["value"]) for row in rows]
 
+    def append_schema_draft(self, scope_id: str, record: dict) -> None:
+        if record["gap"]["company_id"] != scope_id:
+            raise ValueError("Schema draft does not belong to scope")
+        subject = uri(scope_id, "schema-draft", record["id"])
+        self._append_immutable(scope_id, subject, subject, record, "SchemaDraft")
+
+    def read_schema_draft(self, scope_id: str, draft_id: str) -> dict | None:
+        subject = uri(scope_id, "schema-draft", draft_id)
+        return self._read_json(scope_id, subject, subject)
+
+    def list_schema_drafts(self, scope_id: str) -> list[dict]:
+        rows = self._query(scope_id, f"SELECT ?payload WHERE {{ GRAPH ?graph {{ ?graph a {NS.SchemaDraft.n3()}; {NS.payload.n3()} ?payload }} }}")["results"]["bindings"]
+        return [json.loads(row["payload"]["value"]) for row in rows]
+
     @staticmethod
     def _current_predicate(kind: str):
         if kind not in {"tree", "ontology"}:
