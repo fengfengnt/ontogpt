@@ -3524,6 +3524,7 @@ source = { editable = "." }
 dependencies = [
     { name = "ontogpt" },
     { name = "pydantic" },
+    { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]
@@ -3535,6 +3536,7 @@ dev = [
 requires-dist = [
     { name = "ontogpt", editable = "../../" },
     { name = "pydantic", specifier = ">=2.4.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
 ]
 
 [package.metadata.requires-dev]

@@ -1,0 +1,29 @@
+schemas:
+- company_id: test_buyer1
+  category_key: computer
+  version: v1
+  yaml_path: company/test_buyer1/computer/v1/test_buyer1_computer.yaml
+  python_path: company/test_buyer1/computer/v1/test_buyer1_computer.py
+  root_class: BuyerComputerExtraction
+  yaml_sha256: d3e4f4663a58a70dfcff15b441eefda510c89ecd121370ccd8795a8d18aeb942
+  python_sha256: 5a2f80ed243e2a10dfcd7b2a47b78450aba2c0742edf4ca5533f51ac317fd1be
+  generator_version: 1.12.1
+  dependency_versions:
+    linkml: 1.12.1
+    linkml-runtime: 1.12.1
+    pydantic: 2.14.1
+  type_schema_sha256: 1c79b264397bec0eadb404d22e9b163458f1b889809b3b482ecc39c98743fe00
+- company_id: test_supplier1
+  category_key: computer
+  version: v1
+  yaml_path: company/test_supplier1/computer/v1/test_supplier1_computer.yaml
+  python_path: company/test_supplier1/computer/v1/test_supplier1_computer.py
+  root_class: SupplierComputerExtraction
+  yaml_sha256: 835de98c5303c4d94a7742c650cf7d288f25a77d1402851e4ebfc81a30e79602
+  python_sha256: e43ac48d9dfd07dea7e50c7fffb2ffea4fdb7194ba7ee3ef4afd32e5de252bea
+  generator_version: 1.12.1
+  dependency_versions:
+    linkml: 1.12.1
+    linkml-runtime: 1.12.1
+    pydantic: 2.14.1
+  type_schema_sha256: 1c79b264397bec0eadb404d22e9b163458f1b889809b3b482ecc39c98743fe00

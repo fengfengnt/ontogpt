@@ -100,10 +100,10 @@
 
 **Interfaces:** `load_registered_template(company_id, category_key, version) -> TemplateBinding` 返回 YAML、已生成 Python、根类、SHA-256、生成器/导入依赖摘要与 `SchemaView`；甲乙根类分别为 `BuyerComputerExtraction`、`SupplierComputerExtraction`，不调用现有 `get_template_details(custom.yaml)` 的根目录复制与运行时生成路径。
 
-- [ ] 写 `test_buyer_supplier_have_distinct_files`、`test_nested_import_and_hash`、`test_installed_template_artifacts`：两套路径不同，根类可解析，生成模块可导入，文件及导入依赖校验值匹配；篡改文件则拒绝加载；wheel 安装后仍包含并可加载两套嵌套模板。
-- [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_schema_loader.py -q`，期望失败。
-- [ ] 依据甲乙模拟原文分别写最小 LinkML 字段、关系及中文 schema 说明；部署前用 LinkML 确定性生成 Python 并登记哈希。`general_template` 仅作编写参考。
-- [ ] 重跑测试并确认现有 OntoGPT Web 模板列表未暴露企业 schema；提交本任务文件。
+- [x] 写 `test_buyer_supplier_have_distinct_files`、`test_nested_import_and_hash`、`test_installed_template_artifacts`：两套路径不同，根类可解析，生成模块可导入，文件及导入依赖校验值匹配；篡改文件则拒绝加载；wheel 安装后仍包含并可加载两套嵌套模板。
+- [x] 运行新测试观察到 5 项缺少加载器的失败；追加依赖摘要测试观察到篡改依赖未被拒绝的失败。
+- [x] 依据甲乙模拟原文分别写最小 LinkML 字段、关系；LinkML 连续两次生成结果一致，登记产物及依赖摘要。`general_template` 仅作编写参考。
+- [x] 加载/安装产物测试 6 项通过；实际调用现有模板枚举函数确认 66 个演示模板不含企业模板；提交本任务文件。
 
 ### Task 6: SQLite schema 激活命令
 

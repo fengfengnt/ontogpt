@@ -84,7 +84,7 @@ package = true
 include-package-data = true
 
 [tool.setuptools.package-data]
-ontogpt = ["*.yaml"]
+ontogpt = ["*.yaml", "templates/company/*/*/*/*.yaml", "templates/company/*/*/*/*.py"]
 
 [tool.black]
 line-length = 100
