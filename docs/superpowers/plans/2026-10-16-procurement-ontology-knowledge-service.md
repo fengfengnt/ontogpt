@@ -1,5 +1,7 @@
 # 采购本体知识服务 Implementation Plan
 
+状态：历史计划，尚未执行；需依据 [2026-10-19 MVP 详细设计](../specs/2026-10-19-procurement-ontology-mvp-design.md) 重新编写并经用户审核。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 在本仓库交付可运行的独立知识服务，让甲乙两家试点企业把有来源的候选知识审核发布，再经授权的 JSON API 和 MCP Tools 查询。
