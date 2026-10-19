@@ -67,10 +67,10 @@
 
 **Interfaces:** 固定 Fuseki 镜像版本及项目独立持久卷；测试仅在显式 `FUSEKI_TEST_URL` 存在时运行。一次受控更新写入新版本具名图和当前指针；该实测方法供 Task 4 复用。
 
-- [ ] 写 `test_failed_update_keeps_old_pointer`、`test_concurrent_reads_see_complete_version`：断言失败后指针及旧图仍可读，并发读者从不看到半张新版图。
-- [ ] 在 Ubuntu WSL Docker 启动本项目独立容器，记录镜像版本、端口、卷名和 Windows→WSL 连通性；运行集成测试，先确认测试能揭示未满足的事务条件。
-- [ ] 选择并记录实测通过的单次 Fuseki 更新方式；若无法证明原子可见性与失败回滚，停止后续发布实现并修订设计。
-- [ ] 重跑两项真实 Fuseki 测试，期望通过；提交部署配置、测试和中文操作说明，不触碰现有容器或卷。
+- [x] 写 `test_failed_update_keeps_old_pointer`、`test_concurrent_reads_see_complete_version`，并增加并发条件写入和匿名访问反例。
+- [x] 部署前测试确认端点未启动而失败；Ubuntu WSL Docker 启动独立容器，记录固定镜像、3032 端口、持久卷和 Windows 连通性。
+- [x] 真实 TDB2 单次条件更新实测通过：写入后运行时失败完整回滚，并发读取只见完整版本，同基础版只有一个发布生效。
+- [x] 真实事务测试 4 项通过，含 Fuseki 的服务测试合计 32 项通过；提交配置及操作说明，其他现有容器和卷未变更。
 
 ### Task 3: 账号、企业数据域与会话
 
