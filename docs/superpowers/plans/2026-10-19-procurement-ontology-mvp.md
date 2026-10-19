@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**执行状态：** 用户已选择使用 `superpowers:executing-plans` 在当前任务逐项实施。本轮先交付 [评审文档包](../../procurement-ontology/README.md) 后暂停；收到用户审阅后的明确继续指令，再进行实施前检查及 Task 1。当前没有已完成的产品实施任务。
+
 **Goal:** 交付甲乙双方独立的电脑二级品类知识服务，完成模型提取、人工审核、版本发布、企业本体与三级树可视化编辑、授权查询和 Agent 问答。
 
 **Architecture:** `services/procurement_ontology/` 承担身份、治理与查询，SQLite 保存账号和启用 schema 指针，Fuseki/TDB2 的平台及企业数据集保存各自版本化知识。React 前端只经 FastAPI 管理 API 操作，MCP 与 LangGraph Agent 复用同一只读查询服务；运行中的 OntoGPT Web 演示保持独立。
@@ -9,6 +11,8 @@
 **Tech Stack:** Python 3.10+、现有 OntoGPT/LinkML/Pydantic、FastAPI、SQLite、RDFLib、Apache Jena Fuseki/TDB2（Ubuntu WSL Docker）、MCP Python SDK、LangGraph、React、TypeScript、Vite、Cytoscape.js、pytest、Vitest。
 
 **Spec:** `docs/superpowers/specs/2026-10-19-procurement-ontology-mvp-design.md`
+
+**设计细节：** [目录结构](../../procurement-ontology/directory-structure.md)、[系统架构](../../procurement-ontology/system-architecture.md)、[详细设计](../../procurement-ontology/detailed-design.md)、[前端设计](../../procurement-ontology/frontend-design.md)、[企业 schema](../../procurement-ontology/schemas/README.md)、[需求与验收矩阵](../../procurement-ontology/review-and-validation.md)。
 
 ## Global Constraints
 
@@ -50,7 +54,7 @@
 
 **Files:** Create `services/procurement_ontology/pyproject.toml`, `procurement_ontology/__init__.py`, `procurement_ontology/models.py`, `tests/unit/test_models.py`（后三者均在该服务目录下）。
 
-**Interfaces:** `SourceRevision(id, company_id, text, sha256, simulated, submitted_by, created_at)`、`SourceSpan(revision_id, start, end, quote)`、`CategoryNode(id, level, parent_id, label)`、`KnowledgeItem(id, kind, label, description, category_id, scope, source_spans, access_policy_ref=None)`、`Candidate(id, item, status)`、`PublishedSnapshot(id, kind, payload, previous_id)` 为 Pydantic 模型；`Candidate.status` 区分待审候选与无依据的 `MODEL_SUGGESTION`。
+**Interfaces:** `SourceRevision(id, scope_id, text, sha256, simulated, submitted_by, created_at)`、`SourceSpan(revision_id, start, end, quote)`、`CategoryNode(id, level, parent_id, label)`、`KnowledgeItem(id, kind, label, description, category_id, scope, source_spans, access_policy_ref=None)`、`KnowledgeRelation(id, subject_id, predicate, object_id, source_spans, scope)`、`Candidate(id, item, status)`、`PublishedSnapshot(id, kind, payload, previous_id)` 为 Pydantic 模型；`scope_id` 为服务端数据域，条目 `scope` 为业务适用范围，`Candidate.status` 区分待审候选与无依据的 `MODEL_SUGGESTION`。其余运行和版本元数据按详细设计实现。
 
 - [ ] 写 `test_span_matches_source` 和 `test_category_level_is_one_to_three`：`assert span.quote == text[span.start:span.end]`，非法层级须抛校验错误；`access_policy_ref` 默认 `None`。
 - [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_models.py -q`，确认新测试先失败。
@@ -72,9 +76,9 @@
 
 **Files:** Create `services/procurement_ontology/procurement_ontology/identity.py`, `tests/unit/test_identity.py`.
 
-**Interfaces:** `IdentityStore(sqlite_path)` 提供 `create_company(id)`, `create_account(company_id, role, credentials)`, `authenticate(credentials) -> Identity`；`authorize(identity, scope, action) -> None` 执行数据域检查。`Identity` 带不可由请求覆盖的 `scope`（`platform` 或企业 ID）和角色。平台管理员可执行企业开通操作，但不能借此读写企业知识。
+**Interfaces:** `IdentityStore(sqlite_path)` 提供 `bootstrap_admin(credentials)`, `create_company(id)`, `create_account(company_id, role, credentials)`, `authenticate(credentials) -> Identity`；`authorize(identity, scope_id, action) -> None` 执行数据域检查。`bootstrap_admin` 只在没有平台管理员时可用。`Identity` 带不可由请求覆盖的 `scope_id`（`platform` 或企业 ID）和角色。平台管理员可执行企业开通操作，但不能借此读写企业知识。
 
-- [ ] 写 `test_identity_scope_is_server_owned`、`test_platform_cannot_read_company_knowledge`：`assert identity.scope == "test_buyer1"`，伪造目标企业和平台访问企业知识均被拒绝；凭据明文不出现在 SQLite。
+- [ ] 写 `test_bootstrap_admin_is_one_time`、`test_identity_scope_is_server_owned`、`test_platform_cannot_read_company_knowledge`：`assert identity.scope_id == "test_buyer1"`，重复初始化、伪造目标企业和平台访问企业知识均被拒绝；凭据明文不出现在 SQLite。
 - [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_identity.py -q`，期望失败。
 - [ ] 实现 SQLite 账户/会话存储、密码散列、权限检查和一人一企业绑定；保留企业开通审计。
 - [ ] 重跑测试，期望通过；提交本任务文件。
@@ -83,7 +87,7 @@
 
 **Files:** Create `services/procurement_ontology/procurement_ontology/store.py`, `rdf_codec.py`, `platform_seed.py`, `tests/integration/test_store.py`.
 
-**Interfaces:** `bootstrap_platform(store) -> None` 幂等创建空的通用本体初始版与通用三级树初始版，树的试点路径取自已有甲方候选文档 `IT与通讯 → 办公设备 → 电脑(台式机/笔记本)`；`FusekiStore.provision_company(company_id, platform_versions) -> None` 幂等地从平台已发布本体/树创建独立企业初始快照；`append_source`、`append_candidates`、`read_batch`、`read_current(scope, kind)`、`publish(scope, kind, snapshot, expected_version)` 只操作服务端选择的数据集。`scope` 为平台或企业，绝不接受浏览器自报范围。
+**Interfaces:** `bootstrap_platform(store) -> None` 幂等创建空的通用本体初始版与通用三级树初始版，树的试点路径取自已有甲方候选文档 `IT与通讯 → 办公设备 → 电脑(台式机/笔记本)`；`FusekiStore.provision_company(company_id, platform_versions) -> None` 幂等地从平台已发布本体/树创建独立企业初始快照及其来源闭包，重写企业内部 ID；`append_source`、`append_candidates`、`read_batch`、`read_current(scope_id, kind)`、`publish(scope_id, kind, snapshot, expected_version)` 只操作服务端选择的数据集。`scope_id` 为平台或企业，绝不接受浏览器自报范围。
 
 - [ ] 写 `test_company_clone_is_independent`、`test_provision_retry_is_idempotent`、`test_source_roundtrip`、`test_publish_conflict_and_rollback`：更新通用树后已建企业仍读旧树，新企业读新版；重复开通不复制版本；失败写入不改变旧指针。
 - [ ] 使用 Task 2 的 Fuseki 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/integration/test_store.py -q`，期望失败。
@@ -92,11 +96,11 @@
 
 ### Task 5: 甲乙独立 schema 与只读加载
 
-**Files:** Create `src/ontogpt/templates/company/general_template/README.md`, `test_buyer1/computer/v1/test_buyer1_computer.{yaml,py}`, `test_supplier1/computer/v1/test_supplier1_computer.{yaml,py}`, `docs/procurement-ontology/schemas/{test_buyer1,test_supplier1}/computer/v1.md`, `services/procurement_ontology/schema_registry.yaml`, `procurement_ontology/schema_loader.py`, `tests/unit/test_schema_loader.py`.
+**Files:** Create `src/ontogpt/templates/company/general_template/README.md`, `src/ontogpt/templates/company/test_buyer1/computer/v1/test_buyer1_computer.{yaml,py}`, `src/ontogpt/templates/company/test_supplier1/computer/v1/test_supplier1_computer.{yaml,py}`, `services/procurement_ontology/schema_registry.yaml`, `procurement_ontology/schema_loader.py`, `tests/unit/test_schema_loader.py`；modify 根 `pyproject.toml` 的嵌套模板打包配置，核对已编写的 `docs/procurement-ontology/schemas/{test_buyer1,test_supplier1}/computer/v1.md`。
 
-**Interfaces:** `load_registered_template(company_id, category_id, version) -> TemplateBinding` 返回 YAML、已生成 Python、根类、SHA-256 与 `SchemaView`；不调用现有 `get_template_details(custom.yaml)` 的根目录复制与运行时生成路径。
+**Interfaces:** `load_registered_template(company_id, category_key, version) -> TemplateBinding` 返回 YAML、已生成 Python、根类、SHA-256、生成器/导入依赖摘要与 `SchemaView`；甲乙根类分别为 `BuyerComputerExtraction`、`SupplierComputerExtraction`，不调用现有 `get_template_details(custom.yaml)` 的根目录复制与运行时生成路径。
 
-- [ ] 写 `test_buyer_supplier_have_distinct_files`、`test_nested_import_and_hash`：两套路径不同，根类可解析，生成模块可导入，文件校验值匹配；篡改文件则拒绝加载。
+- [ ] 写 `test_buyer_supplier_have_distinct_files`、`test_nested_import_and_hash`、`test_installed_template_artifacts`：两套路径不同，根类可解析，生成模块可导入，文件及导入依赖校验值匹配；篡改文件则拒绝加载；wheel 安装后仍包含并可加载两套嵌套模板。
 - [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_schema_loader.py -q`，期望失败。
 - [ ] 依据甲乙模拟原文分别写最小 LinkML 字段、关系及中文 schema 说明；部署前用 LinkML 确定性生成 Python 并登记哈希。`general_template` 仅作编写参考。
 - [ ] 重跑测试并确认现有 OntoGPT Web 模板列表未暴露企业 schema；提交本任务文件。
@@ -105,7 +109,7 @@
 
 **Files:** Create `services/procurement_ontology/procurement_ontology/schema_catalog.py`, `cli.py`, `tests/unit/test_schema_activation.py`.
 
-**Interfaces:** `SchemaCatalog.active(company_id, category_id) -> TemplateBinding`；`activate_schema(identity, company_id, category_id, version) -> ActivationRecord` 验证目标企业、部署文件/哈希、根类和生成模块，在一个 SQLite 事务中更新指针与操作者/时间审计。CLI 暴露 `activate-schema <公司> <二级品类> <版本>`。
+**Interfaces:** `SchemaCatalog.active(company_id, category_key) -> TemplateBinding`；`activate_schema(identity, company_id, category_key, version) -> ActivationRecord` 验证目标企业、部署文件/哈希、根类和生成模块，在一个 SQLite 事务中更新指针与操作者/时间审计。CLI 暴露 `activate-schema <公司> <二级品类> <版本>`。
 
 - [ ] 写 `test_activation_is_atomic`、`test_wrong_company_and_missing_artifact_fail`：`assert active.version == "v1"` 只在审计也增加后成立；失败时两表行数及指针不变。
 - [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_schema_activation.py -q`，期望失败。
@@ -114,11 +118,11 @@
 
 ### Task 7: 原文修订、实际模型提取与证据定位
 
-**Files:** Create `services/procurement_ontology/procurement_ontology/intake.py`, `extraction.py`, `tests/unit/test_extraction.py`, `tests/fixtures/supplier-laptop-bid-case.md`；沿用 `tests/fixtures/procurement/laptop-purchase-case.md`。
+**Files:** Create `services/procurement_ontology/procurement_ontology/intake.py`, `extraction.py`, `tests/unit/test_extraction.py`, `tests/fixtures/supplier-laptop-bid-case.md`；沿用仓库根的 `tests/fixtures/procurement/laptop-purchase-case.md`。
 
-**Interfaces:** `IntakeService.submit(identity, text, simulated) -> SourceRevision`；`ExtractionService.extract(identity, revision_id) -> ExtractionRun` 固定当前启用 schema 的版本/哈希，通过仓库现有 `SPIRESEngine` 提取，再把输出映射为候选、关系与原文 `SourceSpan`。模型连接从服务配置取得。
+**Interfaces:** `IntakeService.submit(identity, text, simulated) -> SourceRevision`；`ExtractionService.extract(identity, revision_id, category_key) -> ExtractionRun` 固定当前启用 schema 的版本/哈希，通过仓库现有 `SPIRESEngine` 提取，再把输出映射为候选、关系与原文 `SourceSpan`。模型连接从服务配置取得。
 
-- [ ] 写 `test_buyer_and_supplier_use_own_schema`、`test_ambiguous_quote_stays_unverified`、`test_retry_keeps_one_run`：两份原文各绑定自己的 schema；重复摘录无唯一位置时不得形成可发布事实；任务开始后的指针变化不改本次版本。
+- [ ] 写 `test_buyer_and_supplier_use_own_schema`、`test_ambiguous_quote_stays_unverified`、`test_original_unicode_offsets`、`test_retry_keeps_one_run`：两份原文各绑定自己的 schema；重复摘录无唯一位置时不得形成可发布事实；中文、换行与非 BMP 字符的摘录仍定位到原文；任务开始后的指针变化不改本次版本。
 - [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_extraction.py -q`，期望失败。
 - [ ] 从用户提供的乙方模拟案例复制测试资料并保留模拟标记；实现来源校验、抽取失败状态和重试去重；模型输出不得直接发布。
 - [ ] 重跑替身模型测试，期望通过；提交本任务文件。真实模型调用留在 Task 15 贯通验收单独记录。
@@ -127,9 +131,9 @@
 
 **Files:** Create `services/procurement_ontology/procurement_ontology/governance.py`, `query.py`, `tests/integration/test_governance_query.py`.
 
-**Interfaces:** `GovernanceService.review(identity, candidate_id, decision)`、`edit_item(identity, change, observed_version)`、`edit_tree(identity, change, observed_version)`、`publish(identity, kind, batch_id)`；`KnowledgeQuery.search(identity, text, category_id)` 与 `get(identity, item_id, observed_version)` 仅读本企业当前已发布版。平台通用本体/树只能经平台身份编辑并发布。
+**Interfaces:** `GovernanceService.review(identity, candidate_id, decision)`、`edit_item(identity, change, observed_version)`、`edit_tree(identity, change, observed_version)`、`publish(identity, kind, batch_id)`；`KnowledgeQuery.search(identity, text, category_key)` 与 `get(identity, item_id, observed_version=None)` 仅读本企业当前已发布版。`observed_version` 携带树和本体版本对，平台通用本体/树只能经平台身份编辑并发布。
 
-- [ ] 写 `test_unpublished_is_invisible`、`test_referenced_category_cannot_be_deleted`、`test_platform_and_company_write_scopes`、`test_observed_version_conflict`：未审候选不可查，删被引用节点失败，平台不能改企业，旧版本详情返回版本变化。
+- [ ] 写 `test_unpublished_is_invisible`、`test_referenced_category_cannot_be_deleted`、`test_platform_and_company_write_scopes`、`test_observed_version_conflict`、`test_cost_conflict_is_not_silently_overwritten`：未审候选不可查，删被引用节点失败，平台不能改企业，树或本体换版后详情返回版本变化；600/1,200 元冲突不能静默覆盖。
 - [ ] 使用 Fuseki 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/integration/test_governance_query.py -q`，期望失败。
 - [ ] 实现审核轨迹、来源/范围/关系/唯一父级校验、待审批次和不可变发布；树节点先发布后才能被新本体引用，查询返回来源片段和实际版本。
 - [ ] 重跑集成测试，期望通过；提交本任务文件。
@@ -160,7 +164,7 @@
 
 **Files:** Create `frontend/procurement-ontology/package.json`, `vite.config.ts`, `DESIGN.md`, `src/styles/tokens.css`, `src/api.ts`, `src/App.tsx`, `src/TreeEditor.tsx`, `src/PlatformEditor.tsx`, `src/App.test.tsx`.
 
-**Interfaces:** `api.ts` 使用同源会话调用 Task 10 API；企业工作区只显示自身资料、审核、树菜单、本体画布与问答入口；平台工作区只显示通用本体及通用树管理。树编辑组件提交节点/父子关系的变更操作和所见版本。
+**Interfaces:** `api.ts` 使用同源会话调用 Task 10 API；企业工作区只显示自身资料、审核、树菜单和本体画布，固定甲方问答入口仅对获准甲方账号显示；平台工作区只显示通用本体及通用树管理。树编辑组件提交节点/父子关系的变更操作和所见版本。
 
 - [ ] 写 `test_company_only_sees_own_workspace`、`test_platform_has_no_company_routes`、`test_tree_editor_rejects_fourth_level`：断言菜单项与提交 API 路径按身份分域，第四层不产生写请求。
 - [ ] 运行 `npm test --prefix frontend/procurement-ontology -- --run`，期望失败。
@@ -173,7 +177,7 @@
 
 **Interfaces:** Cytoscape.js 接收服务端按企业、品类、发布版裁剪的节点/边及待审覆盖层；`toChange(selected, operation, observed_version)` 只生成条目/关系操作，不产生分类树或 LinkML 修改。右侧属性面板显示范围、来源和模拟标记。
 
-- [ ] 写 `test_canvas_emits_item_relation_changes_only`、`test_stale_version_prompts_refresh`：断言操作带所见版本和来源；分类节点编辑按钮不存在；409 不覆盖当前服务端图。
+- [ ] 写 `test_canvas_emits_item_relation_changes_only`、`test_stale_version_prompts_refresh`：断言操作带所见版本和来源；分类节点编辑按钮不存在；已部署但未激活的新关系不能提交；409 不覆盖当前服务端图。
 - [ ] 运行 `npm test --prefix frontend/procurement-ontology -- --run`，期望失败。
 - [ ] 实现局部图、连线关系类型选择、增改移除及差异预览；所有保存进入待审批次，颜色与节点样式从语义 tokens 读取。
 - [ ] 重跑前端测试与构建，期望通过；提交本任务文件。
@@ -204,7 +208,7 @@
 
 **Files:** Create `services/procurement_ontology/tests/integration/test_acceptance.py`；modify `services/procurement_ontology/README.md`，仅为贯通缺口修改前述任务文件。
 
-**Interfaces:** 复用 Tasks 1–14；无新生产抽象。验收覆盖平台初始化、两企业真实资料、候选审核、树和本体发布、查询、schema 起草/激活、画布变更、Agent、重启和双备份恢复。
+**Interfaces:** 复用 Tasks 1–14；无新生产抽象。按需求与验收矩阵检查平台初始化、两企业模拟资料经真实模型提取、候选审核、树和本体发布、查询、schema 起草/激活、画布变更、Agent、重启和双备份恢复。
 
 - [ ] 写 `test_buyer_supplier_end_to_end`：断言甲乙各自模型候选经审核才可查、模拟/项目范围保留、乙方成本只在乙方可见、平台更新不改老企业、API/MCP/Agent 版本一致。
 - [ ] 用真实 Fuseki 运行贯通测试，修复阻塞该测试的最小集成缺口；记录故障注入与并发发布结果。
