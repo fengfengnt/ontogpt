@@ -78,6 +78,28 @@ def test_provision_retry_is_idempotent(store):
     assert len(first.payload["nodes"]) == 3
 
 
+def test_partial_provision_retry_keeps_frozen_platform_versions(store, monkeypatch):
+    versions = current_platform_versions(store)
+    original = store.publish
+
+    def interrupt(scope, kind, snapshot, expected, **kwargs):
+        if scope == "test_buyer1" and kind == "ontology":
+            raise ConnectionError("initialization interrupted")
+        return original(scope, kind, snapshot, expected, **kwargs)
+
+    monkeypatch.setattr(store, "publish", interrupt)
+    with pytest.raises(ConnectionError):
+        store.provision_company("test_buyer1", versions)
+    monkeypatch.setattr(store, "publish", original)
+    platform = store.read_current("platform", "tree")
+    payload = copy.deepcopy(platform.payload)
+    payload["nodes"][-1]["label"] = "后来的通用模板"
+    store.publish("platform", "tree", PublishedSnapshot(id="tree-new", kind="tree", payload=payload,
+                  previous_id=platform.id, created_by="platform-reviewer"), platform.id)
+    store.provision_company("test_buyer1", current_platform_versions(store))
+    assert store.read_current("test_buyer1", "tree").payload["nodes"][-1]["label"] == "电脑(台式机/笔记本)"
+
+
 def test_company_clone_copies_source_closure(store):
     platform_source = source("platform", "原厂上门")
     store.append_source("platform", platform_source)

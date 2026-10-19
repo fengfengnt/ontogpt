@@ -155,10 +155,10 @@
 
 **Interfaces:** `create_app(...) -> FastAPI` 提供登录、企业开通、来源提交/抽取、自然语言 schema 缺口提交与草案状态、审核、树/本体变更与发布、schema 激活状态、`GET /v1/ontology/items`、`GET /v1/ontology/items/{id}`。企业开通按 Task 4 幂等顺序创建独立数据集及 SQLite 账户。MCP 仅提供 `search_ontology_items` 和 `get_ontology_item`，调用同一个 `KnowledgeQuery`。
 
-- [ ] 写 `test_tenant_override_is_ignored`、`test_platform_cannot_read_company`、`test_company_provision_retry`、`test_mcp_api_parity`：伪造企业参数、猜 ID、关系路径和计数均不能越界；开通重试不重复实例化；同身份 API/MCP 返回同一版本及来源；MCP 无写工具。
-- [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_api_mcp.py -q`，期望失败。
-- [ ] 实现同源会话认证、管理 API 与薄 MCP 适配，浏览器和 Agent 均不直连 Fuseki；错误响应不暴露他企是否存在。
-- [ ] 重跑测试，期望通过；提交本任务文件。
+- [x] 写企业参数伪造、猜 ID、平台隔离、幂等开通、API/MCP 来源及版本一致、Cookie/CSRF/退出测试；MCP 实际 HTTP 只列出两个读工具。
+- [x] 初始 5 项因 API 缺失失败；MCP 结构化输出、初始化中断后模板冻结和本地初始化命令测试观察到失败。
+- [x] 实现同源会话、管理 API、MCP 2.x 薄适配、本机单进程入口；来源和权限仍由服务校验，网页不直连 Fuseki。
+- [x] API/MCP 5 项通过，实际 HTTP 工具调用结果与 API 详情一致；含真实 Fuseki 的服务全套 87 项通过，CLI 帮助及一次性初始化测试通过。
 
 ### Task 11: 前端工作区、树菜单与平台入口
 

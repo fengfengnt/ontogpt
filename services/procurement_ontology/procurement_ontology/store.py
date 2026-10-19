@@ -91,6 +91,10 @@ class FusekiStore:
         value = self._read_json(scope_id, uri(scope_id, "source-graph", source_id), uri(scope_id, "source", source_id))
         return SourceRevision.model_validate(value) if value is not None else None
 
+    def list_sources(self, scope_id: str) -> list[SourceRevision]:
+        rows = self._query(scope_id, f"SELECT ?payload WHERE {{ GRAPH ?graph {{ ?source a {NS.SourceRevision.n3()}; {NS.payload.n3()} ?payload }} }}")["results"]["bindings"]
+        return [SourceRevision.model_validate_json(row["payload"]["value"]) for row in rows]
+
     def append_candidates(self, scope_id: str, batch_id: str, candidates: list[Candidate]) -> None:
         for candidate in candidates:
             self._append_immutable(scope_id, uri(scope_id, "batch", batch_id), uri(scope_id, "candidate", candidate.id),
@@ -244,8 +248,7 @@ class FusekiStore:
             graph.add((root, NS.initialized_at, Literal(utc_now().isoformat())))
             self._update(company_id, f"INSERT {{ GRAPH {control.n3()} {{ {graph.serialize(format='nt')} }} }} WHERE {{ FILTER NOT EXISTS {{ GRAPH {control.n3()} {{ {root.n3()} {NS.initial_tree.n3()} ?old }} }} }}")
             state = self._initialization(company_id)
-        if any(state[str(NS["initial_" + kind])] != platform_versions[kind] for kind in ("tree", "ontology")):
-            raise VersionConflict("Initialization template versions were already fixed")
+        platform_versions = {kind: state[str(NS["initial_" + kind])] for kind in ("tree", "ontology")}
         tree = self.read_version("platform", "tree", platform_versions["tree"])
         ontology = self.read_version("platform", "ontology", platform_versions["ontology"])
         if tree is None or ontology is None:

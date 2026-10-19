@@ -131,6 +131,21 @@ class IdentityStore:
             if db.execute("UPDATE companies SET status='READY' WHERE company_id=?", (company_id,)).rowcount != 1:
                 raise ValueError("企业尚未开通")
 
+    def company_state(self, company_id: str, actor: Identity) -> dict | None:
+        authorize(actor, "platform", "provision")
+        with self._db() as db:
+            row = db.execute("SELECT company_id,status FROM companies WHERE company_id=?", (company_id,)).fetchone()
+            return dict(row) if row else None
+
+    def company_has_account(self, company_id: str, actor: Identity) -> bool:
+        authorize(actor, "platform", "provision")
+        with self._db() as db:
+            return db.execute("SELECT 1 FROM accounts WHERE company_id=?", (company_id,)).fetchone() is not None
+
+    def ready_company_ids(self) -> list[str]:
+        with self._db() as db:
+            return [row[0] for row in db.execute("SELECT company_id FROM companies WHERE status='READY'")]
+
     def create_account(self, company_id: str, role: str, credentials: Credentials, actor: Identity) -> Identity:
         if role not in {"company_admin", "reader"}:
             raise PermissionError("不允许创建此类账号")
