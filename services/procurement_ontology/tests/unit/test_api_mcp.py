@@ -137,3 +137,14 @@ def test_cookie_login_csrf_and_logout(application):
     assert client.post("/v1/manage/sources", json=payload).status_code == 200
     assert client.delete("/v1/session").status_code == 200
     assert client.get("/v1/me").status_code == 401
+
+
+def test_agent_http_scope_cannot_be_overridden(application):
+    client, app, identities, actors, platform = application
+    response = client.post("/v1/agent/questions", json={"question": "保修方式？"})
+    assert response.status_code == 200
+    assert response.json()["citations"] == []
+    assert client.post("/v1/agent/questions", json={"question": "保修方式？", "company_id": "test_supplier1"}).status_code == 422
+    for actor in (actors["test_supplier1"], platform):
+        client.headers["Authorization"] = "Bearer " + identities.issue_session(actor)
+        assert client.post("/v1/agent/questions", json={"question": "查询甲方"}).status_code == 403

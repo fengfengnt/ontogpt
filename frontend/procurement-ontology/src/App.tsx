@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useState } from 'react';
 import { api, message, type Batch, type Identity } from './api';
 import TreeEditor from './TreeEditor';
 import PlatformEditor from './PlatformEditor';
+import AgentPage from './AgentPage';
 import { PublishPage, ReviewPage, SchemaPage, SourcesPage } from './ManagementPages';
 
 const OntologyCanvas = lazy(() => import('./OntologyCanvas'));
@@ -31,6 +32,7 @@ export default function App() {
   const prefix = platform ? '/v1/platform' : '/v1/manage';
   const menus = platform ? [['generic', '通用本体'], ['tree', '通用三级树'], ['publish', '通用发布记录'], ['provision', '企业开通']]
     : reader ? [['canvas', '本体画布'], ['tree', '三级分类树']] : [['sources', '资料与提取'], ['review', '候选审核'], ['canvas', '本体画布'], ['tree', '三级分类树'], ['schema', 'Schema 改进'], ['publish', '发布记录']];
+  if (identity.scope_id === 'test_buyer1') menus.push(['agent', '本体问答测试']);
   const selected = tab || menus[0][0];
   const title = menus.find(([key]) => key === selected)?.[1] ?? '工作区';
   function onPending(batch: Batch) { setPending(batch); }
@@ -52,6 +54,7 @@ export default function App() {
         {selected === 'schema' && !platform && !reader && <SchemaPage company={identity.scope_id} />}
         {selected === 'publish' && !reader && <PublishPage prefix={prefix} onPublished={() => { setPending(undefined); setRefresh(value => value + 1); }} />}
         {selected === 'provision' && platform && <ProvisionPage />}
+        {selected === 'agent' && identity.scope_id === 'test_buyer1' && <AgentPage />}
       </div>
     </div></main></div>;
 }

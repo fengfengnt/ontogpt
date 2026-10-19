@@ -77,3 +77,9 @@ test('tree menu can add a procurement responsibility root', async () => {
     change: { op: 'add_node', node: { id: expect.any(String), label: '生产物资', level: 1, parent_id: null } }, observed_version: versions,
   } }));
 });
+
+test('fixed buyer Agent entry is available only inside the buyer workspace', async () => {
+  identity('test_buyer1');
+  render(<App />);
+  expect(await screen.findByRole('button', { name: '本体问答测试' })).toBeInTheDocument();
+});

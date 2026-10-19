@@ -15,6 +15,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import Field
 
 from .extraction import ExtractionService
+from .agent import BuyerAgent
 from .governance import GovernanceService
 from .identity import Credentials, Identity, authorize
 from .intake import IntakeService
@@ -70,9 +71,14 @@ class GapInput(SourceInput):
     category_key: str = "computer"
 
 
+class QuestionInput(DomainModel):
+    question: str = Field(min_length=1, max_length=2000)
+
+
 def create_app(identities, store, catalog, *, draft_parent, client_factory=configured_client,
                frontend_dist: Path | None = None):
     query = KnowledgeQuery(store)
+    agent = BuyerAgent(query, client_factory)
     governance, intake = GovernanceService(store, catalog), IntakeService(store)
     drafts = SchemaDraftService(store, draft_parent, client_factory)
     extraction = ExtractionService(store, catalog, client_factory, gap_handler=drafts.from_suggestion)
@@ -320,6 +326,10 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
     @app.post("/v1/manage/service-token")
     def service_token(actor: Scoped):
         return {"token": identities.issue_service_token(actor), "expires_in": 86400}
+
+    @app.post("/v1/agent/questions")
+    def answer(data: QuestionInput, actor: Actor):
+        return agent.answer_laptop_question(actor, data.question)
 
     app.mount("/mcp", mcp_app)
     if frontend_dist and Path(frontend_dist).is_dir():

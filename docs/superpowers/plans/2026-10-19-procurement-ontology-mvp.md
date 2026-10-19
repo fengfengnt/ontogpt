@@ -188,10 +188,10 @@
 
 **Interfaces:** `answer_laptop_question(question) -> AgentAnswer` 在服务端固定 `test_buyer1 / 电脑(台式机/笔记本)`，仅调用 `KnowledgeQuery.search/get`；返回答案、实际工具引用的条目 ID、来源片段和本体版本。浏览器页只有提问及这些结果。
 
-- [ ] 写 `test_agent_uses_fixed_scope_and_citations`、`test_supplier_cannot_open_buyer_agent`、`test_no_evidence_says_no_evidence` 和前端引用显示测试：只有甲方测试账号能调用固定甲方 Agent；请求携带他企 ID 不改变范围；没有工具命中不得编造来源。
-- [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_agent.py -q` 与前端测试，期望失败。
-- [ ] 实现最小 LangGraph 搜索→详情→回答流程及问答页；服务端从工具实际输出整理引用，不接受模型自报的 ID。
-- [ ] 重跑两端测试与前端构建，期望通过；提交本任务文件。
+- [x] 写固定甲方数据域、供应商/平台拒绝、无依据、虚构引用拒绝、自然语言检索及前端引用展示测试；实际 API 检查企业参数不能覆盖范围。
+- [x] 初始 Agent 6 项及问答页测试因模块缺失失败。
+- [x] 实现 LangGraph 搜索→详情→回答；自然语言问题必要时转成受约束关键词，引用只从本次已读取详情组装，保留模拟及项目范围。
+- [x] Agent 6 项通过，含真实 Fuseki 的服务全套 94 项、前端 10 项及生产构建通过。模型仍为测试替身，真实调用留待 Task 15。
 
 ### Task 14: SQLite/Fuseki 双备份与恢复
 
