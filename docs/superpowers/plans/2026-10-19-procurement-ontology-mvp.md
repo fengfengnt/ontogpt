@@ -166,10 +166,10 @@
 
 **Interfaces:** `api.ts` 使用同源会话调用 Task 10 API；企业工作区只显示自身资料、审核、树菜单和本体画布，固定甲方问答入口仅对获准甲方账号显示；平台工作区只显示通用本体及通用树管理。树编辑组件提交节点/父子关系的变更操作和所见版本。
 
-- [ ] 写 `test_company_only_sees_own_workspace`、`test_platform_has_no_company_routes`、`test_tree_editor_rejects_fourth_level`：断言菜单项与提交 API 路径按身份分域，第四层不产生写请求。
-- [ ] 运行 `npm test --prefix frontend/procurement-ontology -- --run`，期望失败。
-- [ ] 实现 React/Vite 最小页面、Claude 参考 `DESIGN.md` 与语义 tokens、资料/审核/发布、自然语言缺口提交与草案状态、树形 CRUD 和平台通用本体的最小属性编辑入口；服务端仍执行最终授权与校验。
-- [ ] 重跑前端测试和 `npm run build --prefix frontend/procurement-ontology`，期望通过；提交本任务文件。
+- [x] 写企业/平台菜单、第四层禁止、树改名的版本提交和新增采购负责类测试，并检查浏览器与 Python Unicode 证据偏移一致。
+- [x] 初始测试因组件缺失失败；根节点新增测试在入口实现前失败。
+- [x] 实现 React/Vite 工作区、Claude 参考样式、资料/审核/发布、自然语言草案、树形 CRUD 和平台通用本体属性/关系编辑；前端不直接访问 Fuseki。
+- [x] 前端组件测试与生产构建通过。企业画布和甲方问答入口随 Task 12/13 接入；浏览器验收仍待 Task 15。
 
 ### Task 12: 企业业务本体画布
 
