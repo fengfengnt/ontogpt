@@ -3,7 +3,7 @@ name = "procurement-ontology-service"
 version = "0.1.0"
 description = "Enterprise-scoped procurement ontology service"
 requires-python = ">=3.10,<3.15"
-dependencies = ["ontogpt", "pydantic>=2.4.0", "pyyaml>=6.0"]
+dependencies = ["ontogpt", "pydantic>=2.4.0", "pyyaml>=6.0", "rdflib>=6.2", "requests>=2.31,<3"]
 
 [build-system]
 requires = ["setuptools>=65.5.0"]

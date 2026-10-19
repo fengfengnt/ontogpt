@@ -3525,6 +3525,8 @@ dependencies = [
     { name = "ontogpt" },
     { name = "pydantic" },
     { name = "pyyaml" },
+    { name = "rdflib" },
+    { name = "requests" },
 ]
 
 [package.dev-dependencies]
@@ -3537,6 +3539,8 @@ requires-dist = [
     { name = "ontogpt", editable = "../../" },
     { name = "pydantic", specifier = ">=2.4.0" },
     { name = "pyyaml", specifier = ">=6.0" },
+    { name = "rdflib", specifier = ">=6.2" },
+    { name = "requests", specifier = ">=2.31,<3" },
 ]
 
 [package.metadata.requires-dev]

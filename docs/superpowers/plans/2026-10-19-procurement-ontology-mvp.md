@@ -89,10 +89,10 @@
 
 **Interfaces:** `bootstrap_platform(store) -> None` 幂等创建空的通用本体初始版与通用三级树初始版，树的试点路径取自已有甲方候选文档 `IT与通讯 → 办公设备 → 电脑(台式机/笔记本)`；`FusekiStore.provision_company(company_id, platform_versions) -> None` 幂等地从平台已发布本体/树创建独立企业初始快照及其来源闭包，重写企业内部 ID；`append_source`、`append_candidates`、`read_batch`、`read_current(scope_id, kind)`、`publish(scope_id, kind, snapshot, expected_version)` 只操作服务端选择的数据集。`scope_id` 为平台或企业，绝不接受浏览器自报范围。
 
-- [ ] 写 `test_company_clone_is_independent`、`test_provision_retry_is_idempotent`、`test_source_roundtrip`、`test_publish_conflict_and_rollback`：更新通用树后已建企业仍读旧树，新企业读新版；重复开通不复制版本；失败写入不改变旧指针。
-- [ ] 使用 Task 2 的 Fuseki 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/integration/test_store.py -q`，期望失败。
-- [ ] 实现具名图映射、平台及企业数据集开通、来源/候选往返和 Task 2 已验证的发布事务；普通读只取完整当前快照。
-- [ ] 重跑集成测试，期望通过；提交本任务文件。
+- [x] 写企业独立复制、幂等重试、来源/候选往返、发布失败和并发反例，并补充复制来源闭包及 RDF 关系来源可查询测试。
+- [x] 运行初始测试观察缺少存储实现的失败；关系来源联查测试在补充 RDF reification 前明确失败。
+- [x] 实现具名图映射、平台及企业数据集开通、来源/候选往返和已验证的发布事务；普通读只取完整当前快照。
+- [x] 真实存储集成测试 8 项通过；含真实 Fuseki 的全部服务测试 40 项通过；提交本任务文件。
 
 ### Task 5: 甲乙独立 schema 与只读加载
 
