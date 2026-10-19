@@ -177,10 +177,10 @@
 
 **Interfaces:** Cytoscape.js 接收服务端按企业、品类、发布版裁剪的节点/边及待审覆盖层；`toChange(selected, operation, observed_version)` 只生成条目/关系操作，不产生分类树或 LinkML 修改。右侧属性面板显示范围、来源和模拟标记。
 
-- [ ] 写 `test_canvas_emits_item_relation_changes_only`、`test_stale_version_prompts_refresh`：断言操作带所见版本和来源；分类节点编辑按钮不存在；已部署但未激活的新关系不能提交；409 不覆盖当前服务端图。
-- [ ] 运行 `npm test --prefix frontend/procurement-ontology -- --run`，期望失败。
-- [ ] 实现局部图、连线关系类型选择、增改移除及差异预览；所有保存进入待审批次，颜色与节点样式从语义 tokens 读取。
-- [ ] 重跑前端测试与构建，期望通过；提交本任务文件。
+- [x] 写仅业务条目/关系操作、当前启用关系白名单及 409 保留表单并停止保存测试。
+- [x] 测试在画布组件实现前因模块缺失失败。
+- [x] 实现 Cytoscape 局部图、键盘可用列表、条目/关系增改移除、来源及待发布差异；样式读取语义 tokens，分类树不提供画布编辑。
+- [x] 前端全部 8 项测试和生产构建通过；画布按需加载。真实浏览器操作仍在 Task 15 验收。
 
 ### Task 13: LangGraph Agent 与浏览器问答页
 

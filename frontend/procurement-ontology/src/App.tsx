@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { api, message, type Batch, type Identity } from './api';
 import TreeEditor from './TreeEditor';
 import PlatformEditor from './PlatformEditor';
 import { PublishPage, ReviewPage, SchemaPage, SourcesPage } from './ManagementPages';
+
+const OntologyCanvas = lazy(() => import('./OntologyCanvas'));
 
 export default function App() {
   const [identity, setIdentity] = useState<Identity | null>();
@@ -46,22 +48,12 @@ export default function App() {
         {selected === 'review' && !platform && !reader && <ReviewPage initialBatch={batchId} onPending={onPending} />}
         {selected === 'tree' && <TreeEditor prefix={prefix} onPending={onPending} readOnly={reader} />}
         {selected === 'generic' && platform && <PlatformEditor onPending={onPending} />}
-        {selected === 'canvas' && !platform && <PublishedList />}
+        {selected === 'canvas' && !platform && <Suspense fallback={<p role="status">加载关系画布…</p>}><OntologyCanvas onPending={onPending} readOnly={reader} /></Suspense>}
         {selected === 'schema' && !platform && !reader && <SchemaPage company={identity.scope_id} />}
         {selected === 'publish' && !reader && <PublishPage prefix={prefix} onPublished={() => { setPending(undefined); setRefresh(value => value + 1); }} />}
         {selected === 'provision' && platform && <ProvisionPage />}
       </div>
     </div></main></div>;
-}
-
-function PublishedList() {
-  const [items, setItems] = useState<any[]>([]);
-  const [error, setError] = useState('');
-  useEffect(() => { api('/v1/ontology/items?category_key=computer').then(result => setItems(result.items)).catch(e => setError(message(e))); }, []);
-  return <section className="panel"><h2>当前已发布知识</h2>{error && <p role="alert">{error}</p>}
-    {items.map(item => <article className="record" key={item.id}><h3>{item.label}</h3><p>{item.description}</p></article>)}
-    {!items.length && <p className="empty">暂无已发布知识，请先完成资料提取、审核和发布。</p>}
-  </section>;
 }
 
 function ProvisionPage() {

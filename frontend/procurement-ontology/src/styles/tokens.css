@@ -83,6 +83,11 @@ nav button[aria-current=page] { background: var(--accent-soft); color: var(--acc
 details { margin-top: 12px; }
 summary { cursor: pointer; color: var(--text-muted); }
 hr { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }
+.canvas-grid { display: grid; grid-template-columns: minmax(350px, 1.5fr) minmax(320px, 1fr); gap: 20px; align-items: start; }
+.ontology-graph { height: 540px; min-width: 0; }
+.graph-panel { padding: 12px; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+@media (max-width: 1120px) { .canvas-grid { grid-template-columns: 1fr; } .ontology-graph { height: 420px; } }
 @media (max-width: 950px) { .two-col { grid-template-columns: 1fr; } .content { padding: 20px; } .page-header { padding: 24px 20px; } }
 @media (max-width: 680px) {
   .workspace { display: block; } .sidebar { padding: 16px; border-right: 0; border-bottom: 1px solid var(--border); gap: 16px; }
