@@ -1,0 +1,60 @@
+Browser tab: 2, Title: "采购知识工作台", URL: "http://127.0.0.1:8002/".
+0 AXWebArea 采购知识工作台, URL: 127.0.0.1:8002/
+	1 container root
+		2 container
+			3 text 知 采购知识工作台 KNOWLEDGE STUDIO
+			4 container 工作区菜单
+				5 button 资料与提取
+				6 button 候选审核
+				7 button 本体画布
+				8 button 三级分类树
+				9 button Schema 改进
+				10 button 发布记录
+				11 button 本体问答测试
+			12 text test_buyer1 企业管理员
+			13 button 退出登录
+		14 container
+			15 text 企业独立知识空间  / 电脑(台式机/笔记本)
+			16 heading 本体问答测试, Value: 1
+				17 text 本体问答测试
+			18 text 只读已发布 · 修改先待审
+			19 heading 向本企业知识提问, Value: 2
+				20 text 向本企业知识提问
+			21 text 知识范围固定为甲方的电脑二级品类，只使用已发布条目。答案保留实际版本和原文依据。
+			22 container
+				23 text 问题
+				24 text entry area (settable) 问题, Value: 这个项目的保修方式应该怎么确认？
+				25 button 基于已发布本体回答
+			28 container
+				29 heading 回答, Value: 3
+					30 text 回答
+				31 text 以下依据来自模拟资料。
+
+本项目（PRO-IT-2026-014，办公笔记本，采购技术规范阶段）的保修方式应按“本项目保修要求”确认：原厂3年上门保修，下一工作日到场（NBD），不接受送修和经销商延保包；该要求仅用于本项目。确认时应采集供应商的“保修服务响应信息”，即是否提供原厂三年上门NBD保修，并提供原厂保修承诺及上门响应方式等原厂承诺依据。 树： initial-tree-v1
+				32 text 本体： pub-change-f559ba2755a040f786f69d9fe9e48215
+			26 heading 本次工具引用, Value: 2
+				27 text 本次工具引用
+			33 container
+				34 heading 本项目保修要求, Value: 3
+					35 text 本项目保修要求
+				36 text 模拟资料 项目： PRO-IT-2026-014  · 阶段： 采购技术规范 | ★保修 | 原厂 3 年上门保修（下一工作日到场 NBD） | 不接受送修、不接受经销商延保包 |
+				37 container
+					38 text source-f019a01d4dda4fe888e451639177666e  [ 1950 ,  2001 )
+				39 text | ★保修 | 原厂 3 年上门保修（下一工作日到场 NBD） | 不接受送修、不接受经销商延保包 |
+				40 container
+					41 text source-f019a01d4dda4fe888e451639177666e  [ 1950 ,  2001 )
+				42 text 7587bad6-e3cc-464a-b81b-2d588bd532e5
+				43 button 查看条目详情
+			44 container
+				45 heading 保修服务响应信息, Value: 3
+					46 text 保修服务响应信息
+				47 text 模拟资料 项目： PRO-IT-2026-014  · 阶段： 采购技术规范 | ★保修 | 原厂 3 年上门保修（下一工作日到场 NBD） | 不接受送修、不接受经销商延保包 |
+				48 container
+					49 text source-f019a01d4dda4fe888e451639177666e  [ 1950 ,  2001 )
+				50 text | ★保修 | 原厂 3 年上门保修（下一工作日到场 NBD） | 不接受送修、不接受经销商延保包 |
+				51 container
+					52 text source-f019a01d4dda4fe888e451639177666e  [ 1950 ,  2001 )
+				53 text 94b7898b-671c-4135-a97b-de9639af7d08
+				54 button 查看条目详情
+
+The focused UI element is 0 AXWebArea 采购知识工作台, URL: 127.0.0.1:8002/

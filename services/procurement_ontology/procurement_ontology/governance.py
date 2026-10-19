@@ -175,6 +175,8 @@ class GovernanceService:
                         "device_type": item.scope.device_type, "stage": item.scope.stage})
                 if item.kind in {"InternalCost", "PricingStrategy"} and not item.scope.project_ref:
                     raise ValueError("内部成本和报价策略须保留项目范围")
+                if item.kind == "ConditionTemplate" and item.properties.get("case_threshold") and not item.scope.project_ref:
+                    raise ValueError("案例门槛须保留项目范围")
         relations = [KnowledgeRelation.model_validate(value) for value in ontology.get("relations", [])]
         if len({relation.id for relation in relations}) != len(relations):
             raise ValueError("关系 ID 重复")

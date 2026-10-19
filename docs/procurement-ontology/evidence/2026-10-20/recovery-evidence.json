@@ -1,0 +1,47 @@
+{
+  "platform": {
+    "versions": {
+      "tree": "pub-change-8bb02d7fd31b452d9d06307997440026",
+      "ontology": "ontology-v1"
+    },
+    "counts": {
+      "read_pair": 2,
+      "list_sources": 0,
+      "list_runs": 0,
+      "list_change_batches": 2,
+      "list_schema_drafts": 0
+    }
+  },
+  "test_buyer1": {
+    "versions": {
+      "tree": "initial-tree-v1",
+      "ontology": "pub-change-f559ba2755a040f786f69d9fe9e48215"
+    },
+    "counts": {
+      "read_pair": 2,
+      "list_sources": 2,
+      "list_runs": 1,
+      "list_change_batches": 2,
+      "list_schema_drafts": 3
+    }
+  },
+  "test_supplier1": {
+    "versions": {
+      "tree": "initial-tree-v1",
+      "ontology": "pub-batch-run-863ada903bdcb16c3b69d7113c404a5143ede324e316bd3ec164d9e4a49c3225"
+    },
+    "counts": {
+      "read_pair": 2,
+      "list_sources": 1,
+      "list_runs": 1,
+      "list_change_batches": 1,
+      "list_schema_drafts": 3
+    }
+  },
+  "sqlite": {
+    "activation_audit_count": 2,
+    "accounts_and_pointers_equal": true
+  },
+  "cli_backup_restore": true,
+  "docker_restart_persisted": true
+}

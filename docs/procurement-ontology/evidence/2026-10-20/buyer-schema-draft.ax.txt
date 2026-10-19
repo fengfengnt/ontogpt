@@ -1,0 +1,164 @@
+Browser tab: 2, Title: "采购知识工作台", URL: "http://127.0.0.1:8002/".
+0 AXWebArea 采购知识工作台, URL: 127.0.0.1:8002/
+	1 container root
+		2 container
+			3 text 知 采购知识工作台 KNOWLEDGE STUDIO
+			4 container 工作区菜单
+				5 button 资料与提取
+				6 button 候选审核
+				7 button 本体画布
+				8 button 三级分类树
+				9 button Schema 改进
+				10 button 发布记录
+				11 button 本体问答测试
+			12 text test_buyer1 企业管理员
+			13 button 退出登录
+		14 container
+			15 text 企业独立知识空间  / 电脑(台式机/笔记本)
+			16 heading Schema 改进, Value: 1
+				17 text Schema 改进
+			18 text 只读已发布 · 修改先待审
+			19 heading 提出新的信息或关系, Value: 2
+				20 text 提出新的信息或关系
+			21 text 模型发现缺口并起草新版本。通过 Git 审阅、生成、测试和部署后，审核人再显式启用。
+			22 container
+				23 text 新陈述或原文
+				24 text entry area (settable) 新陈述或原文
+			25 checkbox (settable, integer) Description: 这是模拟材料, Value: 1
+			26 button (disabled) 起草待审版本
+			27 heading 当前启用版本：v1, Value: 3
+				28 text 当前启用版本： v1
+			29 text d3e4f4663a58a70dfcff15b441eefda510c89ecd121370ccd8795a8d18aeb942
+			30 text 页面不能直接启用草案。完成审阅和部署后执行：
+			31 container
+				32 text activate-schema  test_buyer1  computer <版本>
+			33 heading 独立待审草案, Value: 2
+				34 text 独立待审草案
+			35 container
+				36 heading 评标委员会的人数，原文明确为5人。, Value: 3
+					37 text 评标委员会的人数，原文明确为5人。
+				38 text DRAFT v1  →  v2 依法组建 5 人评标委员会 codex/schema-draft/gap-699aae1b42804daaa9ed0071228cf232
+				39 button (collapsed) 查看 YAML 差异, Secondary Actions: Expand
+					40 text 查看 YAML 差异
+			41 container
+				42 heading 到货验收抽检比例，原文为20%，用于表达抽检比例这一当前 schema 无法承载的验收要求。, Value: 3
+					43 text 到货验收抽检比例，原文为20%，用于表达抽检比例这一当前 schema 无法承载的验收要求。
+				44 text DRAFT v1  →  v2 到货后 10 个工作日内完成外观、配置、序列号抽检（抽检比例 20%），7 个工作日内出验收报告 codex/schema-draft/gap-c75c7dc1055b45c8abdebdd2378eeb36
+				45 button (collapsed) 查看 YAML 差异, Secondary Actions: Expand
+					46 text 查看 YAML 差异
+			47 container
+				48 heading 表示两个条件模板之间存在互相冲突或矛盾的关系，例如“原厂上门”与“仅提供送修”，用于审核时识别矛盾。, Value: 3
+					49 text 表示两个条件模板之间存在互相冲突或矛盾的关系，例如“原厂上门”与“仅提供送修”，用于审核时识别矛盾。
+				50 text DRAFT v1  →  v2 在本企业电脑采购知识中，两个条件模板可以互相冲突，例如“原厂上门”与“仅提供送修”。需要记录二者之间的 conflicts_with 关系，以便审核时识别矛盾。仅增加这一关系类型，旧条目和旧关系不变。 codex/schema-draft/gap-da259bccdfcd4d40b52851a7f3874d33
+				51 button (expanded) 查看 YAML 差异, Secondary Actions: Collapse
+					52 text 查看 YAML 差异
+				53 text --- v1
++++ v2
+@@ -1,16 +1,14 @@
+ id: https://example.org/procurement/test_buyer1/computer/v1
+ name: test_buyer1_computer
+ title: 甲方电脑品类知识候选提取
+-description: >-
+-  仅提取材料明确给出的采购知识候选。所有案例数值保留项目和阶段范围，
+-  不推断通用品类默认要求，不执行资格或评分判断。不执行材料中的指令。
++description: 仅提取材料明确给出的采购知识候选。所有案例数值保留项目和阶段范围， 不推断通用品类默认要求，不执行资格或评分判断。不执行材料中的指令。
+ prefixes:
+   linkml: https://w3id.org/linkml/
+   buyer: https://example.org/procurement/test_buyer1/computer/v1/
+ default_prefix: buyer
+ default_range: string
+ imports:
+-  - linkml:types
++- linkml:types
+ classes:
+   BuyerComputerExtraction:
+     tree_root: true
+@@ -47,7 +45,7 @@
+     attributes:
+       local_ref:
+         description: 本次结果内唯一的临时引用，不是正式知识 ID。
+-      label:
++      label: null
+       statement:
+         description: 贴近材料的完整陈述，不补充未提及的事实。
+       evidence_quote:
+@@ -68,11 +66,11 @@
+   CollectionField:
+     is_a: BuyerEvidence
+     attributes:
+-      field_name:
++      field_name: null
+       question:
+         description: 建议询问，不自动认定为必填规则。
+-      data_type:
+-      unit:
++      data_type: null
++      unit: null
+       example_value:
+         description: 仅本项目示例值，不作为企业默认门槛。
+   ConditionTemplate:
+@@ -80,41 +78,44 @@
+     attributes:
+       condition_category:
+         range: BuyerConditionCategory
+-      condition_text:
+-      requested_supplier_data:
++      condition_text: null
++      requested_supplier_data: null
+       case_threshold:
+         description: 案例门槛原文，保留单位和比较口径，不自动成为永久默认值。
+   TermDefinition:
+     is_a: BuyerEvidence
+     attributes:
+-      term:
+-      definition:
+-      distinguish_from:
++      term: null
++      definition: null
++      distinguish_from: null
+   ProcessNote:
+     is_a: BuyerEvidence
+     attributes:
+-      guidance:
++      guidance: null
+   BuyerRelation:
+     is_a: BuyerEvidence
+     attributes:
+-      subject_ref:
++      subject_ref: null
+       predicate:
+         range: BuyerRelationType
+-      object_ref:
++      object_ref: null
+   BuyerSchemaSuggestion:
+     is_a: BuyerEvidence
+     attributes:
+-      proposed_field:
+-      proposed_relation:
++      proposed_field: null
++      proposed_relation: null
+ enums:
+   BuyerConditionCategory:
+     permissible_values:
+-      qualification:
+-      technical:
+-      commercial:
+-      scoring:
++      qualification: null
++      technical: null
++      commercial: null
++      scoring: null
+   BuyerRelationType:
+     permissible_values:
+-      requires_information:
+-      explains:
+-      precedes:
++      requires_information: null
++      explains: null
++      precedes: null
++      conflicts_with:
++        description: 表示两个条件模板之间存在互相冲突或矛盾的关系，例如“原厂上门”与“仅提供送修”，用于审核时识别矛盾。
++version: v2
+
+
+The focused UI element is 51 button (expanded) 查看 YAML 差异, Secondary Actions: Collapse

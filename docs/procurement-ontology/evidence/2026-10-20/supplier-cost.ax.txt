@@ -1,0 +1,53 @@
+Browser tab: 2, Title: "采购知识工作台", URL: "http://127.0.0.1:8002/".
+0 AXWebArea 采购知识工作台, URL: 127.0.0.1:8002/
+	1 container root
+		2 container
+			3 text 知 采购知识工作台 KNOWLEDGE STUDIO
+			4 container 工作区菜单
+				5 button 资料与提取
+				6 button 候选审核
+				7 button 本体画布
+				8 button 三级分类树
+				9 button Schema 改进
+				10 button 发布记录
+			11 text test_supplier1 企业管理员
+			12 button 退出登录
+		13 container
+			14 text 企业独立知识空间  / 电脑(台式机/笔记本)
+			15 heading 本体画布, Value: 1
+				16 text 本体画布
+			17 text 只读已发布 · 修改先待审 二级品类
+			18 pop up button (collapsed, settable) 二级品类, Value: 电脑(台式机/笔记本), Secondary Actions: Expand
+				19 menu
+					20 (selected) 电脑(台式机/笔记本)
+			21 text 局部图检索
+			22 text field (settable) 局部图检索
+			23 button 检索
+			24 button 适合视图
+			25 button 新增条目
+			26 button (disabled) 新增关系
+			27 text 树： initial-tree-v1  · 本体： pub-batch-run-863ada903bdcb16c3b69d7113c404a5143ede324e316bd3ec164d9e4a49c3225  ·  1  个条目 · 待发布变更不会进入问答
+			28 container 企业业务本体关系画布
+			29 container
+				30 button (expanded) 条目与关系列表（可使用键盘选择）, Secondary Actions: Collapse
+					31 text 条目与关系列表（可使用键盘选择）
+				32 button 物流 + 卸货搬运
+			33 heading 属性与来源, Value: 2
+				34 text 属性与来源
+			35 heading 物流 + 卸货搬运, Value: 3
+				36 text 物流 + 卸货搬运
+			37 text 内部成本
+			38 text 模拟
+			39 text 物流 + 卸货搬运 3,000
+			40 container
+				41 text 归属： 电脑(台式机/笔记本)
+			42 container
+				43 text 项目： BID-IT-2026-014
+				44 text 设备类型： 笔记本电脑
+				45 text 阶段： 成本测算
+			46 container
+				47 text 物流 + 卸货搬运 | 3,000 | 第三方同城配送 source-552eae032ae24ed2a3cdd16a341f1247  [ 3837 ,  3864 )
+			48 button 编辑条目
+			49 button 提交移除
+
+The focused UI element is 32 button 物流 + 卸货搬运

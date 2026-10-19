@@ -1,0 +1,62 @@
+{
+  "test_buyer1": {
+    "published_count": 3,
+    "versions": {
+      "tree": "initial-tree-v1",
+      "ontology": "pub-change-f559ba2755a040f786f69d9fe9e48215"
+    },
+    "api_mcp_equal": true,
+    "active_schema": "v1",
+    "drafts": [
+      {
+        "id": "gap-699aae1b42804daaa9ed0071228cf232",
+        "status": "DRAFT",
+        "branch": "codex/schema-draft/gap-699aae1b42804daaa9ed0071228cf232",
+        "version": "v2"
+      },
+      {
+        "id": "gap-c75c7dc1055b45c8abdebdd2378eeb36",
+        "status": "DRAFT",
+        "branch": "codex/schema-draft/gap-c75c7dc1055b45c8abdebdd2378eeb36",
+        "version": "v2"
+      },
+      {
+        "id": "gap-da259bccdfcd4d40b52851a7f3874d33",
+        "status": "DRAFT",
+        "branch": "codex/schema-draft/gap-da259bccdfcd4d40b52851a7f3874d33",
+        "version": "v2"
+      }
+    ],
+    "old_company_not_synced": true
+  },
+  "test_supplier1": {
+    "published_count": 1,
+    "versions": {
+      "tree": "initial-tree-v1",
+      "ontology": "pub-batch-run-863ada903bdcb16c3b69d7113c404a5143ede324e316bd3ec164d9e4a49c3225"
+    },
+    "api_mcp_equal": true,
+    "active_schema": "v1",
+    "drafts": [
+      {
+        "id": "gap-ce89ebac0e5c4e77b28010ecb3c70e5b",
+        "status": "DRAFT",
+        "branch": "codex/schema-draft/gap-ce89ebac0e5c4e77b28010ecb3c70e5b",
+        "version": "v2"
+      },
+      {
+        "id": "gap-651ce65f78644509bf0b29507dc1557b",
+        "status": "DRAFT",
+        "branch": "codex/schema-draft/gap-651ce65f78644509bf0b29507dc1557b",
+        "version": "v2"
+      },
+      {
+        "id": "gap-7d8adc44050a4534bda3d142ce3c3249",
+        "status": "DRAFT",
+        "branch": "codex/schema-draft/gap-7d8adc44050a4534bda3d142ce3c3249",
+        "version": "v2"
+      }
+    ],
+    "old_company_not_synced": true
+  }
+}

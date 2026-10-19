@@ -138,6 +138,9 @@ class ExtractionRun(DomainModel):
     python_sha256: str
     batch_id: str
     requested_by: str
+    model_id: str | None = None
+    raw_response: str | None = None
+    response_metadata: dict[str, Any] = Field(default_factory=dict)
     status: Literal["PENDING", "RUNNING", "SUCCEEDED", "FAILED"] = "PENDING"
     candidate_ids: list[str] = Field(default_factory=list)
     unmapped_suggestions: list[dict[str, Any]] = Field(default_factory=list)

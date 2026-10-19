@@ -1,8 +1,8 @@
 # 采购本体知识服务 MVP Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
-**执行状态：** 用户已选择使用 `superpowers:executing-plans` 在当前任务逐项实施，并在文档交付后明确继续。规划提交已合入 `D:/Code/ontogpt` 的 `main`，产品实现继续在独立工作树进行。各 Task 的复选框和执行记录反映实际进度，未勾选任务尚未完成。
+**执行状态：** 用户已选择使用 `superpowers:executing-plans` 在当前任务逐项实施，并在文档交付后明确继续。规划提交已合入 `D:/Code/ontogpt` 的 `main`，产品实现继续在独立工作树进行。15 项实施与本地技术验收已完成；随后进行整分支独立审查并集成。实际证据与业务审核边界见 docs/procurement-ontology/acceptance-2026-10-20.md。
 
 **Goal:** 交付甲乙双方独立的电脑二级品类知识服务，完成模型提取、人工审核、版本发布、企业本体与三级树可视化编辑、授权查询和 Agent 问答。
 
@@ -210,10 +210,10 @@
 
 **Interfaces:** 复用 Tasks 1–14；无新生产抽象。按需求与验收矩阵检查平台初始化、两企业模拟资料经真实模型提取、候选审核、树和本体发布、查询、schema 起草/激活、画布变更、Agent、重启和双备份恢复。
 
-- [ ] 写 `test_buyer_supplier_end_to_end`：断言甲乙各自模型候选经审核才可查、模拟/项目范围保留、乙方成本只在乙方可见、平台更新不改老企业、API/MCP/Agent 版本一致。
-- [ ] 用真实 Fuseki 运行贯通测试，修复阻塞该测试的最小集成缺口；记录故障注入与并发发布结果。
-- [ ] 用已配置的真实模型分别抽取甲乙材料，并在浏览器以甲方、乙方、平台三类账号实操树菜单、画布、问答及越权场景；无模型凭据或浏览器证据时明确标为未验证，不记为通过。
-- [ ] 验证重启和备份恢复后指针、来源、历史及审计完整；运行服务测试、前端测试/构建、`git diff --check`，把实际命令及结果写入中文 README；提交验收记录。
+- [x] 写 `test_buyer_supplier_end_to_end`：断言甲乙各自模型候选经审核才可查、模拟/项目范围保留、乙方成本只在乙方可见、平台更新不改老企业、API/MCP/Agent 版本一致。
+- [x] 用真实 Fuseki 运行贯通测试，修复阻塞该测试的最小集成缺口；记录故障注入与并发发布结果。
+- [x] 用已配置的真实模型分别抽取甲乙材料，并在浏览器以甲方、乙方、平台三类账号实操树菜单、画布、问答及越权场景；无模型凭据或浏览器证据时明确标为未验证，不记为通过。
+- [x] 验证重启和备份恢复后指针、来源、历史及审计完整；运行服务测试、前端测试/构建、`git diff --check`，把实际命令及结果写入中文 README；提交验收记录。
 
 ## 执行边界
 

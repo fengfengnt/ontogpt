@@ -228,3 +228,49 @@ def test_anchored_schema_gap_is_drafted_without_activating():
     assert calls == [("test_buyer1", "v1", "原厂上门")]
     assert run.unmapped_suggestions[0]["draft_id"] == "gap-test"
     assert run.schema_version == "v1"
+
+
+def test_run_records_the_actual_model_before_completion():
+    client = Client(buyer_payload())
+    client.model = "synthetic/extraction"
+    intake, extractor, store, _ = services(client)
+    revision = intake.submit(BUYER, "原厂上门", simulated=True)
+    during_call = []
+    client.during_call = lambda: during_call.extend(store.list_runs(BUYER.scope_id))
+    run = extractor.extract(BUYER, revision.id, "computer")
+    assert run.model_id == "synthetic/extraction"
+    assert during_call[0].model_id == "synthetic/extraction"
+
+
+def test_truncated_response_is_a_failed_private_run_not_partial_candidates():
+    class TruncatedClient:
+        model = "synthetic/extraction"
+        response_metadata = {"finish_reason": "length", "output_tokens": 16384}
+
+        def complete(self, prompt, show_prompt=False):
+            return '{"collection_fields":['
+
+    intake, extractor, store, _ = services(TruncatedClient())
+    source = intake.submit(BUYER, "原厂上门", True)
+    run = extractor.extract(BUYER, source.id, "computer")
+    assert run.status == "FAILED"
+    assert run.error_code == "ModelOutputLimitError"
+    assert run.raw_response == '{"collection_fields":['
+    assert run.response_metadata["finish_reason"] == "length"
+    assert store.batches == {}
+
+
+def test_deepseek_structured_tasks_disable_default_thinking(monkeypatch):
+    import procurement_ontology.model_client as module
+    transmitted = {}
+
+    def provider(**kwargs):
+        transmitted.update(kwargs)
+        return SimpleNamespace(model="deepseek-flash", usage=SimpleNamespace(prompt_tokens=10, completion_tokens=20),
+            choices=[SimpleNamespace(finish_reason="stop", message=SimpleNamespace(content='{}'))])
+
+    monkeypatch.setattr(module, "completion", provider)
+    client = module.ServiceLLMClient(model="deepseek/deepseek-flash", api_key="synthetic-key")
+    assert client.complete('Return one JSON object') == '{}'
+    assert transmitted["reasoning_effort"] == "none"
+    assert client.response_metadata == {"finish_reason": "stop", "response_model": "deepseek-flash", "input_tokens": 10, "output_tokens": 20}

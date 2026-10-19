@@ -206,3 +206,12 @@ def test_tree_and_ontology_publish_compare_both_pointers_atomically(services):
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         assert sorted(executor.map(publish, ("tree", "ontology"))) == ["conflict", "published"]
+
+
+def test_case_threshold_requires_project_scope(services):
+    governance, query, _ = services
+    _, item = propose(services)
+    item.kind = "ConditionTemplate"
+    item.properties = {"case_threshold": "本项目要求三年保修", "condition_category": "technical"}
+    with pytest.raises(ValueError, match="项目"):
+        governance.edit_item(BUYER, {"op": "add_item", "item": item.model_dump(mode="json")}, query.versions(BUYER))

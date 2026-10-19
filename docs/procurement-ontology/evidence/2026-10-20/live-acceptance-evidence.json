@@ -1,0 +1,61 @@
+{
+  "review_mode": "自动化技术验收中的模拟人工审核；不是业务专家正式验收",
+  "runs": {
+    "test_buyer1": {
+      "id": "run-44d478d43f4ba8058343e6b30dcc875afa2abf231e80a56853aedd916394f930",
+      "model_id": "deepseek/deepseek-flash",
+      "schema_version": "v1",
+      "source_sha256": "af2a287082514526ff4413900efae65af99b4c10827db619caecb290e8f5ed45",
+      "candidate_count": 42,
+      "kinds": {
+        "CollectionField": 9,
+        "ConditionTemplate": 23,
+        "relation": 3,
+        "TermDefinition": 3,
+        "ProcessNote": 4
+      },
+      "anchored_count": 34,
+      "published_item_id": "item-004280aac1d75464b201adb53e040d58",
+      "versions": {
+        "tree": "initial-tree-v1",
+        "ontology": "pub-batch-run-44d478d43f4ba8058343e6b30dcc875afa2abf231e80a56853aedd916394f930"
+      }
+    },
+    "test_supplier1": {
+      "id": "run-863ada903bdcb16c3b69d7113c404a5143ede324e316bd3ec164d9e4a49c3225",
+      "model_id": "deepseek/deepseek-flash",
+      "schema_version": "v1",
+      "source_sha256": "f435bbd2439f736aa0ebeb0c05e642eedf3092145a5d21006ae997ec9484f346",
+      "candidate_count": 40,
+      "kinds": {
+        "InternalCost": 14,
+        "DeliveryServiceCapability": 3,
+        "ProductOffering": 1,
+        "PricingStrategy": 6,
+        "QualificationStatement": 3,
+        "ProjectEvidence": 3,
+        "CompanyStatement": 5,
+        "BrandAuthorization": 2,
+        "relation": 3
+      },
+      "anchored_count": 25,
+      "published_item_id": "item-035d65e655cc533282b57e2462fa0049",
+      "versions": {
+        "tree": "initial-tree-v1",
+        "ontology": "pub-batch-run-863ada903bdcb16c3b69d7113c404a5143ede324e316bd3ec164d9e4a49c3225"
+      }
+    }
+  },
+  "agent": {
+    "versions": {
+      "tree": "initial-tree-v1",
+      "ontology": "pub-batch-run-44d478d43f4ba8058343e6b30dcc875afa2abf231e80a56853aedd916394f930"
+    },
+    "citation_ids": [
+      "item-004280aac1d75464b201adb53e040d58"
+    ]
+  },
+  "cross_company_guessed_id_status": 404,
+  "platform_company_read_status": 403,
+  "supplier_buyer_agent_status": 403
+}

@@ -32,6 +32,8 @@ PROCUREMENT_MAX_OUTPUT_TOKENS=16384
 
 `PROCUREMENT_API_KEY` 为可选的显式密钥变量；缺省时复用现有 `LLMClient` 的提供方凭据解析，包括 Oaklib 的 `deepseek-key`。模型名称和服务地址须与实际提供方一致。模型提取、缺口起草和 Agent 均通过服务客户端调用，关闭材料缓存与提示正文日志。
 
+当前 DeepSeek 默认启用高强度 thinking；结构化任务显式使用 `reasoning_effort=none`，将输出预算用于 JSON。提供方默认行为见 [DeepSeek 官方说明](https://api-docs.deepseek.com/guides/thinking_mode/)。达到输出上限的运行标记失败，不接受截断候选；响应正文和结束原因保存在本企业未发布的运行记录中，供授权管理员核对，不进入普通查询或客户端缓存。
+
 ## 审核、发布与 schema 激活
 
 1. 企业保存原文并运行模型提取，保留来源修订、模拟标记、schema 版本和摘要。
@@ -89,3 +91,9 @@ git diff --check
 ```
 
 集成测试为每次运行创建独立测试前缀并清理自己的数据集；没有显式 `FUSEKI_TEST_URL` 时真实存储测试会跳过。测试替身用于稳定验证模型边界，不代表提供方连接或业务事实已验收。真实模型、浏览器三类身份、重启和恢复须在贯通记录中单独列出结果。
+
+## 本次实际验收
+
+2026-10-20 已实际运行真实 DeepSeek 提取、三类身份浏览器操作、API/MCP 内容与版本比较、Docker 重启及 CLI 双库恢复。结果和边界见[本地技术验收记录](../../docs/procurement-ontology/acceptance-2026-10-20.md)。当前两家仍启用 v1；6 个 v2 草案仅在独立 Git 分支待人类审核。
+
+失败的提取运行可显式重试：run ID 保持稳定，重试使用新的不可变候选批次，旧失败批次留存审计；已经成功或正在执行的运行重复请求直接返回，不重复调用模型。

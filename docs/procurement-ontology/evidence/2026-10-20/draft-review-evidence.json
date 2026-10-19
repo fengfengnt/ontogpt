@@ -1,0 +1,116 @@
+[
+  {
+    "id": "gap-699aae1b42804daaa9ed0071228cf232",
+    "company": "test_buyer1",
+    "proposal": {
+      "description": "评标委员会的人数，原文明确为5人。",
+      "name": "evaluation_committee_size",
+      "operation": "add_field",
+      "range": "integer",
+      "target_class": "ProcessNote"
+    },
+    "branch": "codex/schema-draft/gap-699aae1b42804daaa9ed0071228cf232",
+    "commit": "5435a63716bafe1f196fe9d068ba82939ba03222",
+    "version": "v2",
+    "repeated_generation_equal": true,
+    "credential_free_child_import": true,
+    "human_review": "PENDING",
+    "yaml_path": "D:\\Code\\procurement-schema-drafts\\gap-699aae1b42804daaa9ed0071228cf232\\src\\ontogpt\\templates\\company\\test_buyer1\\computer\\v2\\test_buyer1_computer.yaml",
+    "python_path": "D:\\Code\\procurement-schema-drafts\\gap-699aae1b42804daaa9ed0071228cf232\\src\\ontogpt\\templates\\company\\test_buyer1\\computer\\v2\\test_buyer1_computer.py"
+  },
+  {
+    "id": "gap-c75c7dc1055b45c8abdebdd2378eeb36",
+    "company": "test_buyer1",
+    "proposal": {
+      "description": "到货验收抽检比例，原文为20%，用于表达抽检比例这一当前 schema 无法承载的验收要求。",
+      "name": "acceptance_inspection_ratio",
+      "operation": "add_field",
+      "range": "string",
+      "target_class": "ConditionTemplate"
+    },
+    "branch": "codex/schema-draft/gap-c75c7dc1055b45c8abdebdd2378eeb36",
+    "commit": "f9e0d75c09e75481f4cab3ec204ef5dc5e80d1f7",
+    "version": "v2",
+    "repeated_generation_equal": true,
+    "credential_free_child_import": true,
+    "human_review": "PENDING",
+    "yaml_path": "D:\\Code\\procurement-schema-drafts\\gap-c75c7dc1055b45c8abdebdd2378eeb36\\src\\ontogpt\\templates\\company\\test_buyer1\\computer\\v2\\test_buyer1_computer.yaml",
+    "python_path": "D:\\Code\\procurement-schema-drafts\\gap-c75c7dc1055b45c8abdebdd2378eeb36\\src\\ontogpt\\templates\\company\\test_buyer1\\computer\\v2\\test_buyer1_computer.py"
+  },
+  {
+    "id": "gap-da259bccdfcd4d40b52851a7f3874d33",
+    "company": "test_buyer1",
+    "proposal": {
+      "description": "表示两个条件模板之间存在互相冲突或矛盾的关系，例如“原厂上门”与“仅提供送修”，用于审核时识别矛盾。",
+      "name": "conflicts_with",
+      "operation": "add_relation",
+      "range": "string",
+      "target_class": null
+    },
+    "branch": "codex/schema-draft/gap-da259bccdfcd4d40b52851a7f3874d33",
+    "commit": "80f84c6c977db89f4a5c540f7d5d3c2745fb5a43",
+    "version": "v2",
+    "repeated_generation_equal": true,
+    "credential_free_child_import": true,
+    "human_review": "PENDING",
+    "yaml_path": "D:\\Code\\procurement-schema-drafts\\gap-da259bccdfcd4d40b52851a7f3874d33\\src\\ontogpt\\templates\\company\\test_buyer1\\computer\\v2\\test_buyer1_computer.yaml",
+    "python_path": "D:\\Code\\procurement-schema-drafts\\gap-da259bccdfcd4d40b52851a7f3874d33\\src\\ontogpt\\templates\\company\\test_buyer1\\computer\\v2\\test_buyer1_computer.py"
+  },
+  {
+    "id": "gap-ce89ebac0e5c4e77b28010ecb3c70e5b",
+    "company": "test_supplier1",
+    "proposal": {
+      "description": "合同付款条件原文，例如验收后付款比例、质保金比例及压款期限；保留原文表述，不自动换算金额。",
+      "name": "payment_terms_text",
+      "operation": "add_field",
+      "range": "string",
+      "target_class": "PricingStrategy"
+    },
+    "branch": "codex/schema-draft/gap-ce89ebac0e5c4e77b28010ecb3c70e5b",
+    "commit": "561b75902cece46edf4192f482556998bf30a886",
+    "version": "v2",
+    "repeated_generation_equal": true,
+    "credential_free_child_import": true,
+    "human_review": "PENDING",
+    "yaml_path": "D:\\Code\\procurement-schema-drafts\\gap-ce89ebac0e5c4e77b28010ecb3c70e5b\\src\\ontogpt\\templates\\company\\test_supplier1\\computer\\v2\\test_supplier1_computer.yaml",
+    "python_path": "D:\\Code\\procurement-schema-drafts\\gap-ce89ebac0e5c4e77b28010ecb3c70e5b\\src\\ontogpt\\templates\\company\\test_supplier1\\computer\\v2\\test_supplier1_computer.py"
+  },
+  {
+    "id": "gap-651ce65f78644509bf0b29507dc1557b",
+    "company": "test_supplier1",
+    "proposal": {
+      "description": "合同或报价中约定的逾期付款违约金条款原文，例如每日费率及累计上限；保留原文表述，不自动计算金额。",
+      "name": "late_payment_penalty_text",
+      "operation": "add_field",
+      "range": "string",
+      "target_class": "PricingStrategy"
+    },
+    "branch": "codex/schema-draft/gap-651ce65f78644509bf0b29507dc1557b",
+    "commit": "ee0e19dcf8bf8d88489cfaf17f4ce2e2e68c5383",
+    "version": "v2",
+    "repeated_generation_equal": true,
+    "credential_free_child_import": true,
+    "human_review": "PENDING",
+    "yaml_path": "D:\\Code\\procurement-schema-drafts\\gap-651ce65f78644509bf0b29507dc1557b\\src\\ontogpt\\templates\\company\\test_supplier1\\computer\\v2\\test_supplier1_computer.yaml",
+    "python_path": "D:\\Code\\procurement-schema-drafts\\gap-651ce65f78644509bf0b29507dc1557b\\src\\ontogpt\\templates\\company\\test_supplier1\\computer\\v2\\test_supplier1_computer.py"
+  },
+  {
+    "id": "gap-7d8adc44050a4534bda3d142ce3c3249",
+    "company": "test_supplier1",
+    "proposal": {
+      "description": "材料中列出的受邀参与方名称清单（如戴尔、惠普、华为、华硕、京东、苏宁等），用于表达邀请名单这一当前 schema 无法承载的信息。",
+      "name": "invited_supplier_names",
+      "operation": "add_field",
+      "range": "string",
+      "target_class": "ProjectEvidence"
+    },
+    "branch": "codex/schema-draft/gap-7d8adc44050a4534bda3d142ce3c3249",
+    "commit": "42710af4a807e9a43dd202d5e8320cecc9518c33",
+    "version": "v2",
+    "repeated_generation_equal": true,
+    "credential_free_child_import": true,
+    "human_review": "PENDING",
+    "yaml_path": "D:\\Code\\procurement-schema-drafts\\gap-7d8adc44050a4534bda3d142ce3c3249\\src\\ontogpt\\templates\\company\\test_supplier1\\computer\\v2\\test_supplier1_computer.yaml",
+    "python_path": "D:\\Code\\procurement-schema-drafts\\gap-7d8adc44050a4534bda3d142ce3c3249\\src\\ontogpt\\templates\\company\\test_supplier1\\computer\\v2\\test_supplier1_computer.py"
+  }
+]
