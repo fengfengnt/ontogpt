@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**执行状态：** 用户已选择使用 `superpowers:executing-plans` 在当前任务逐项实施。本轮先交付 [评审文档包](../../procurement-ontology/README.md) 后暂停；收到用户审阅后的明确继续指令，再进行实施前检查及 Task 1。当前没有已完成的产品实施任务。
+**执行状态：** 用户已选择使用 `superpowers:executing-plans` 在当前任务逐项实施，并在文档交付后明确继续。规划提交已合入 `D:/Code/ontogpt` 的 `main`，产品实现继续在独立工作树进行。各 Task 的复选框和执行记录反映实际进度，未勾选任务尚未完成。
 
 **Goal:** 交付甲乙双方独立的电脑二级品类知识服务，完成模型提取、人工审核、版本发布、企业本体与三级树可视化编辑、授权查询和 Agent 问答。
 
@@ -56,10 +56,10 @@
 
 **Interfaces:** `SourceRevision(id, scope_id, text, sha256, simulated, submitted_by, created_at)`、`SourceSpan(revision_id, start, end, quote)`、`CategoryNode(id, level, parent_id, label)`、`KnowledgeItem(id, kind, label, description, category_id, scope, source_spans, access_policy_ref=None)`、`KnowledgeRelation(id, subject_id, predicate, object_id, source_spans, scope)`、`Candidate(id, item, status)`、`PublishedSnapshot(id, kind, payload, previous_id)` 为 Pydantic 模型；`scope_id` 为服务端数据域，条目 `scope` 为业务适用范围，`Candidate.status` 区分待审候选与无依据的 `MODEL_SUGGESTION`。其余运行和版本元数据按详细设计实现。
 
-- [ ] 写 `test_span_matches_source` 和 `test_category_level_is_one_to_three`：`assert span.quote == text[span.start:span.end]`，非法层级须抛校验错误；`access_policy_ref` 默认 `None`。
-- [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_models.py -q`，确认新测试先失败。
-- [ ] 实现最小契约和独立服务依赖；根仓库通过可编辑本地依赖复用 OntoGPT，不改现有 Web 演示。
-- [ ] 重跑该测试，期望通过；只提交本任务文件。
+- [x] 写 `test_span_matches_source` 和 `test_category_level_is_one_to_three`：`assert span.quote == text[span.start:span.end]`，非法层级须抛校验错误；`access_policy_ref` 默认 `None`。
+- [x] 运行新测试确认失败：独立环境安装期间先用现有解释器及服务 PYTHONPATH 观察到 9 项缺少模型的失败，替代命令记入执行记录。
+- [x] 实现最小契约和独立服务依赖；根仓库通过可编辑本地依赖复用 OntoGPT，不改现有 Web 演示。
+- [x] 使用计划标准 uv 命令和服务全套测试复核，9 项通过；提交本任务文件。
 
 ### Task 2: WSL Fuseki 与发布原子性前提
 
