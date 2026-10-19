@@ -2,7 +2,7 @@
 
 import threading
 import uuid
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 from dataclasses import asdict
 from pathlib import Path
 from typing import Annotated, Literal
@@ -21,6 +21,7 @@ from .identity import Credentials, Identity, authorize
 from .intake import IntakeService
 from .mcp_server import create_mcp, current_identity
 from .model_client import configured_client
+from .maintenance import MaintenanceError
 from .models import DomainModel, SourceSpan
 from .query import KnowledgeQuery, version_pair
 from .schema_draft import SchemaDraftService
@@ -77,6 +78,8 @@ class QuestionInput(DomainModel):
 
 def create_app(identities, store, catalog, *, draft_parent, client_factory=configured_client,
                frontend_dist: Path | None = None):
+    gate = store.gate
+    identities.gate = catalog.gate = gate
     query = KnowledgeQuery(store)
     agent = BuyerAgent(query, client_factory)
     governance, intake = GovernanceService(store, catalog), IntakeService(store)
@@ -99,6 +102,7 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
     app = FastAPI(title="采购本体知识服务", lifespan=lifespan)
     app.state.query, app.state.governance, app.state.extraction, app.state.mcp = query, governance, extraction, mcp
     app.state.identities, app.state.catalog, app.state.store = identities, catalog, store
+    app.state.gate = gate
 
     def error(status, code, message):
         return JSONResponse(status_code=status, content={"code": code, "message": message, "request_id": uuid.uuid4().hex})
@@ -113,6 +117,8 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
                     raise PermissionError()
                 actor = identities.authenticate_service_token(authorization[7:])
                 reset = current_identity.set(actor)
+            except MaintenanceError:
+                return error(503, "MAINTENANCE", "服务处于维护窗口")
             except PermissionError:
                 return error(401, "UNAUTHENTICATED", "需要有效的企业服务令牌")
         elif request.method not in {"GET", "HEAD", "OPTIONS"}:
@@ -122,13 +128,20 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
             if request.cookies.get(COOKIE) and not request.headers.get("Authorization") and request.headers.get("X-Requested-With") != "procurement-ontology":
                 return error(403, "CSRF_REJECTED", "管理请求缺少同源标记")
         try:
-            response = await call_next(request)
+            with gate.writer() if request.method not in {"GET", "HEAD", "OPTIONS"} and not request.url.path.startswith("/mcp") else nullcontext():
+                response = await call_next(request)
             if request.url.path.startswith(("/v1", "/mcp")):
                 response.headers["Cache-Control"] = "no-store"
             return response
+        except MaintenanceError:
+            return error(503, "MAINTENANCE", "服务处于维护窗口，暂不接受新写入")
         finally:
             if reset is not None:
                 current_identity.reset(reset)
+
+    @app.exception_handler(MaintenanceError)
+    async def maintenance(request, exception):
+        return error(503, "MAINTENANCE", "服务处于维护窗口")
 
     @app.exception_handler(PermissionError)
     async def forbidden(request, exception):

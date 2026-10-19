@@ -13,6 +13,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .maintenance import WriteGate
+
 
 @dataclass(frozen=True)
 class Credentials:
@@ -69,7 +71,8 @@ def _token_hash(token: str) -> str:
 
 
 class IdentityStore:
-    def __init__(self, sqlite_path: str | Path):
+    def __init__(self, sqlite_path: str | Path, *, gate=None):
+        self.gate = gate or WriteGate()
         self.path = Path(sqlite_path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._db() as db:
@@ -98,14 +101,15 @@ class IdentityStore:
 
     @contextmanager
     def _db(self):
-        db = sqlite3.connect(self.path, timeout=10)
-        db.row_factory = sqlite3.Row
-        db.execute("PRAGMA foreign_keys = ON")
-        try:
-            with db:
-                yield db
-        finally:
-            db.close()
+        with self.gate.writer():
+            db = sqlite3.connect(self.path, timeout=10)
+            db.row_factory = sqlite3.Row
+            db.execute("PRAGMA foreign_keys = ON")
+            try:
+                with db:
+                    yield db
+            finally:
+                db.close()
 
     def bootstrap_admin(self, credentials: Credentials) -> Identity:
         with self._db() as db:

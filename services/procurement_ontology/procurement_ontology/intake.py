@@ -4,6 +4,7 @@ import hashlib
 import uuid
 
 from .identity import Identity, authorize
+from .maintenance import business_write
 from .models import SourceRevision
 
 
@@ -11,6 +12,7 @@ class IntakeService:
     def __init__(self, store):
         self.store = store
 
+    @business_write
     def submit(self, identity: Identity, text: str, simulated: bool) -> SourceRevision:
         authorize(identity, identity.scope_id, "write")
         revision = SourceRevision(

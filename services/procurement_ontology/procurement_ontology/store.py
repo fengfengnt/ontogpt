@@ -13,6 +13,7 @@ from rdflib import Graph, Literal, RDF
 
 from .models import Candidate, ChangeBatch, ExtractionRun, PublishedSnapshot, SourceRevision, utc_now
 from .rdf_codec import NS, record_graph, snapshot_graph, uri
+from .maintenance import WriteGate
 
 
 class VersionConflict(ValueError):
@@ -20,7 +21,8 @@ class VersionConflict(ValueError):
 
 
 class FusekiStore:
-    def __init__(self, base_url: str, credentials_file: str | Path, *, dataset_prefix="procurement_"):
+    def __init__(self, base_url: str, credentials_file: str | Path, *, dataset_prefix="procurement_", gate=None):
+        self.gate = gate or WriteGate()
         if not re.fullmatch(r"[A-Za-z0-9_]+", dataset_prefix):
             raise ValueError("Invalid dataset prefix")
         self.base_url = base_url.rstrip("/")
@@ -36,6 +38,10 @@ class FusekiStore:
         return self.dataset_prefix + scope_id
 
     def ensure_dataset(self, scope_id: str) -> None:
+        with self.gate.writer():
+            self._ensure_dataset(scope_id)
+
+    def _ensure_dataset(self, scope_id: str) -> None:
         name = self.dataset_name(scope_id)
         response = self.session.get(f"{self.base_url}/$/datasets/{name}", timeout=30)
         if response.status_code == 404:
@@ -52,10 +58,23 @@ class FusekiStore:
         return response.json()
 
     def _update(self, scope_id: str, update: str):
-        response = self.session.post(f"{self.base_url}/{self.dataset_name(scope_id)}/update", data=update.encode("utf-8"),
-                                     headers={"Content-Type": "application/sparql-update"}, timeout=30)
+        with self.gate.writer():
+            response = self.session.post(f"{self.base_url}/{self.dataset_name(scope_id)}/update", data=update.encode("utf-8"),
+                                         headers={"Content-Type": "application/sparql-update"}, timeout=30)
+            response.raise_for_status()
+            return response
+
+    def list_dataset_scopes(self) -> list[str]:
+        response = self.session.get(self.base_url + "/$/datasets", timeout=30)
         response.raise_for_status()
-        return response
+        scopes = []
+        for entry in response.json()["datasets"]:
+            name = entry["ds.name"].lstrip("/")
+            if name.startswith(self.dataset_prefix):
+                scope = name[len(self.dataset_prefix):]
+                self.dataset_name(scope)
+                scopes.append(scope)
+        return sorted(scopes)
 
     def _read_json(self, scope_id: str, graph, subject):
         rows = self._query(scope_id, f"SELECT ?payload WHERE {{ GRAPH {graph.n3()} {{ {subject.n3()} {NS.payload.n3()} ?payload }} }}")["results"]["bindings"]

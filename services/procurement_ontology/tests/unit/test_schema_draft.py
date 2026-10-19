@@ -112,6 +112,8 @@ def test_model_proposal_creates_scoped_review_record(workspace):
             return '{"operation":"add_relation","name":"supports_remote_deployment","description":"远程部署"}'
 
     records = Records()
+    from procurement_ontology.maintenance import WriteGate
+    records.gate = WriteGate()
     service = SchemaDraftService(records, draft.parent / "generated", client_factory=lambda binding: Client())
     result = service.from_suggestion(Identity("buyer", "test_buyer1", "company_admin"), binding, source,
                                      {"proposed_relation": "远程部署", "source_spans": [span.model_dump()]})

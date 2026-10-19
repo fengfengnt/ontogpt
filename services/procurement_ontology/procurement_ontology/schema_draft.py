@@ -19,6 +19,7 @@ from ontogpt.io.utils import ensure_utf8_coding_cookie
 
 from .identity import authorize
 from .model_client import configured_client
+from .maintenance import business_write
 from .models import DomainModel, SourceSpan
 
 
@@ -156,6 +157,7 @@ class SchemaDraftService:
     def __init__(self, store, draft_parent, client_factory=configured_client):
         self.store, self.draft_parent, self.client_factory = store, Path(draft_parent).resolve(), client_factory
 
+    @business_write
     def from_suggestion(self, identity, binding, source, suggestion):
         authorize(identity, binding.company_id, "write")
         spans = suggestion.get("source_spans", [])

@@ -199,10 +199,10 @@
 
 **Interfaces:** `backup_service(destination) -> BackupManifest` 在阻止新写入的维护窗口内备份 SQLite 与平台/企业 Fuseki 数据集，记录文件校验值；`restore_service(manifest, target) -> None` 校验完整性后恢复两者。不得把密钥或持久卷提交 Git。
 
-- [ ] 写 `test_restore_keeps_pointer_source_history_and_audit`、`test_incomplete_backup_is_rejected`、`test_backup_blocks_new_writes`：恢复后当前/历史快照、来源、schema 指针及操作者审计一致；缺任一数据集或 SQLite 文件拒绝恢复；备份窗口内新写入被拒绝。
-- [ ] 使用真实 Fuseki 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/integration/test_recovery.py -q`，期望失败。
-- [ ] 实现维护窗口备份、校验和恢复命令及中文操作说明；只处理本项目数据集和 SQLite 文件。
-- [ ] 重跑恢复测试，期望通过；提交本任务文件。
+- [x] 写真实恢复、缺文件/路径越界拒绝、拒绝新写入并等待在途操作、恢复中断保持禁用、运行目录锁和启动阻断测试。
+- [x] 初始 5 项因备份模块缺失失败；CLI 和不完整恢复启动测试实现前失败。Windows 文件占用暴露 SQLite 连接未关闭问题，已修复并复核。
+- [x] 实现共享写入闸门、运行目录文件锁、双库清单/摘要、空目标恢复及中文命令说明；不覆盖当前服务或其他卷。
+- [x] 恢复/运行入口测试通过；含真实 Fuseki 的服务全套 102 项通过，65 项依赖弃用警告保留。实际服务停止/启动及 CLI 贯通在 Task 15 继续核验。
 
 ### Task 15: 本地贯通验收与证据
 

@@ -5,6 +5,7 @@ import threading
 import uuid
 
 from .identity import authorize
+from .maintenance import business_write
 from .models import CategoryNode, ChangeBatch, KnowledgeItem, KnowledgeRelation, PublishedSnapshot, utc_now
 from .query import version_pair
 from .store import VersionConflict
@@ -38,6 +39,7 @@ class GovernanceService:
         return ChangeBatch(id="change-" + uuid.uuid4().hex, scope_id=identity.scope_id, kind=kind,
                            base_versions=version_pair(pair), created_by=identity.account_id)
 
+    @business_write
     def review(self, identity, candidate_id, decision, *, corrected=None):
         authorize(identity, identity.scope_id, "review")
         if decision not in {"ACCEPTED", "REJECTED"}:
@@ -65,9 +67,11 @@ class GovernanceService:
             self.store.save_change_batch(identity.scope_id, batch)
             return batch
 
+    @business_write
     def edit_item(self, identity, change, observed_version):
         return self._edit(identity, "ontology", change, observed_version)
 
+    @business_write
     def edit_tree(self, identity, change, observed_version):
         return self._edit(identity, "tree", change, observed_version)
 
@@ -207,6 +211,7 @@ class GovernanceService:
                 if amount:
                     costs[key] = amount
 
+    @business_write
     def publish(self, identity, kind, batch_id):
         authorize(identity, identity.scope_id, "publish")
         with self._lock:

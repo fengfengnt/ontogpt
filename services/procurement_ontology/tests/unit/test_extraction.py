@@ -16,6 +16,8 @@ SUPPLIER = Identity("supplier-admin", "test_supplier1", "company_admin")
 
 class MemoryStore:
     def __init__(self):
+        from procurement_ontology.maintenance import WriteGate
+        self.gate = WriteGate()
         self.sources, self.runs, self.batches = {}, {}, {}
 
     def append_source(self, scope, source):

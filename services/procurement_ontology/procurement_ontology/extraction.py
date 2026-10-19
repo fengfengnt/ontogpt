@@ -10,6 +10,7 @@ from ontogpt.engines.spires_engine import SPIRESEngine
 
 from .identity import Identity, authorize
 from .model_client import configured_client
+from .maintenance import business_write
 from .models import Applicability, Candidate, ExtractionRun, KnowledgeItem, KnowledgeRelation, SourceSpan, utc_now
 
 ENVELOPE_FIELDS = {"local_ref", "label", "statement", "evidence_quote", "evidence_start", "evidence_end",
@@ -92,6 +93,7 @@ class ExtractionService:
         self.gap_handler = gap_handler
         self._lock = threading.Lock()
 
+    @business_write
     def extract(self, identity: Identity, revision_id: str, category_key: str) -> ExtractionRun:
         authorize(identity, identity.scope_id, "write")
         if identity.scope_id == "platform":
@@ -145,6 +147,7 @@ class ExtractionService:
             self.store.save_run(identity.scope_id, run)
             return run
 
+    @business_write
     def recover_interrupted(self, scope_id: str) -> int:
         recovered = 0
         for run in self.store.list_runs(scope_id):

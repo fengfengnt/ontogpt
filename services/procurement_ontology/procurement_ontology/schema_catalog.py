@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .identity import Identity, authorize
 from .models import utc_now
+from .maintenance import WriteGate
 from .schema_loader import DEFAULT_REGISTRY, TemplateBinding, load_registered_template
 
 
@@ -28,7 +29,8 @@ class ActivationRecord:
 
 class SchemaCatalog:
     def __init__(self, sqlite_path: str | Path, *, registry_path: Path = DEFAULT_REGISTRY,
-                 template_root: Path | None = None):
+                 template_root: Path | None = None, gate=None):
+        self.gate = gate or WriteGate()
         self.path = Path(sqlite_path)
         self.registry_path = Path(registry_path)
         self.template_root = template_root
@@ -51,14 +53,15 @@ class SchemaCatalog:
 
     @contextmanager
     def _db(self):
-        db = sqlite3.connect(self.path, timeout=10)
-        db.row_factory = sqlite3.Row
-        db.execute("PRAGMA foreign_keys = ON")
-        try:
-            with db:
-                yield db
-        finally:
-            db.close()
+        with self.gate.writer():
+            db = sqlite3.connect(self.path, timeout=10)
+            db.row_factory = sqlite3.Row
+            db.execute("PRAGMA foreign_keys = ON")
+            try:
+                with db:
+                    yield db
+            finally:
+                db.close()
 
     def _load(self, company_id: str, category_key: str, version: str) -> TemplateBinding:
         return load_registered_template(company_id, category_key, version,
