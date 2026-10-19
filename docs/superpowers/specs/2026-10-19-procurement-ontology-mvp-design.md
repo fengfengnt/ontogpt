@@ -23,7 +23,19 @@ MVP 试点企业为 `test_buyer1` 和 `test_supplier1`。两家企业的原文�
 | 采购本体服务 | `services/procurement_ontology/` 中的独立 Python 服务；统一实现身份检查、候选审核、发布和只读查询。FastAPI 提供管理及业务 JSON API，MCP 只适配同一查询服务。 |
 | LangGraph 演示 Agent | 以服务端固定的 `test_buyer1 / 电脑(台式机/笔记本)` 范围调用只读搜索与详情，使用已发布条目回答问题。测试页是该 Agent 的入口。 |
 
-实现依赖以本仓库已有的 Python、LinkML、Pydantic、FastAPI 能力为基础；新增 LangGraph 和 MCP Python SDK 仅用于已确定的 Agent/MCP 入口。页面沿用轻量服务端页面方式，不引入前端框架。演示 Agent 与提取器通过服务配置取得模型连接信息，不在仓库、页面或提示词中硬编码密钥。
+实现依赖以本仓库已有的 Python、LinkML、Pydantic、FastAPI 能力为基础；新增 LangGraph 和 MCP Python SDK 仅用于已确定的 Agent/MCP 入口。演示 Agent 与提取器通过服务配置取得模型连接信息，不在仓库、页面或提示词中硬编码密钥。
+
+## 前端项目参考与技术栈
+
+| 参考 | 值得借鉴的部分 | 与本项目的边界 |
+| --- | --- | --- |
+| [Ontosphere](https://github.com/ThHanke/ontosphere) | RDF 类与关系的画布交互、搜索、布局、属性编辑、撤销及编辑差异展示；项目使用 React、TypeScript、Vite 和 Reactodia。 | 其 RDF 真相源在浏览器内的 N3 store，也能直接从 SPARQL/Fuseki 载入图；本项目的企业隔离、审核和发布必须由服务端执行，不直接嵌入该应用或让浏览器直连 Fuseki。 |
+| [WebProtégé](https://github.com/protegeproject/webprotege) | 本体修订历史、协作审核和权限界面的产品交互。 | 它是另一套完整的本体系统，作为治理流程参考，不移植其服务端或前端架构。 |
+| [Reactodia](https://github.com/reactodia/reactodia-workspace) 与 [Cytoscape.js](https://js.cytoscape.org/) | Reactodia 更贴近 RDF 图编辑；Cytoscape.js 提供通用图渲染、布局和交互。 | Reactodia 为 LGPL-2.1；本项目先选择 MIT 许可的 Cytoscape.js 作为未来画布层，RDF 语义和改动校验留在服务端。 |
+
+本项目从 MVP 起使用 `React + TypeScript + Vite` 建独立前端，目录为 `frontend/procurement-ontology/`。MVP 提供登录后的资料提交、候选审核、发布操作与状态、Agent 问答测试页；用浏览器 `fetch` 调 FastAPI JSON API，先用原生表单和普通 CSS，不引入通用状态库或大型组件库。生产构建由本服务以同源路径提供，开发环境经 Vite 代理访问 API。浏览器只持有本企业登录会话，不持有 Fuseki 或服务间凭证。
+
+后续可视化编辑在同一前端增加 Cytoscape.js 画布，无需重新选择应用框架；MVP 暂不安装图画布依赖或交付编辑功能。画布只接收服务端按当前企业和本体版本裁剪的节点/关系视图。新增、修改和删除操作提交为待审变更，服务端校验并保留来源与审计，再沿用既定发布流程；浏览器不能直接执行 SPARQL UPDATE 或改写已发布图。
 
 ## 目录与 schema 版本
 
@@ -41,6 +53,7 @@ docs/procurement-ontology/schemas/
   test_supplier1/computer/v1.md
 services/procurement_ontology/
   schema_registry.yaml              # Git 管理的可部署版本清单
+frontend/procurement-ontology/      # React/TypeScript/Vite 管理与问答页面
 deploy/fuseki/                       # 本项目独立的 Docker 配置
 ```
 
@@ -84,7 +97,7 @@ Schema 草案放在待审 Git 分支的新版本目录，生成的 Python 随 YA
 
 MVP 增加一个小型 LangGraph Agent，以本体只读工具进行搜索和详情读取，再根据工具返回内容生成回答。企业与二级品类在服务端固定为 `test_buyer1 / 电脑(台式机/笔记本)`，模型与浏览器都不能传入另一企业或品类。Agent 使用与 JSON API、MCP 相同的查询服务和授权范围，但不直接操作 Fuseki。Agent 不作采购条件判断或入围结论。
 
-Web 测试页需本企业测试账号登录，只有提问框、答案、被引用的条目 ID、来源片段和本体版本。回答只能引用此次工具返回的已发布内容；检索无依据时明确说明未找到依据。浏览器不得接收服务凭证。该页面是本体问答的联调入口，不扩展为通用聊天平台；候选审核继续使用独立的最小管理入口。
+Web 测试页需本企业测试账号登录，只有提问框、答案、被引用的条目 ID、来源片段和本体版本。回答只能引用此次工具返回的已发布内容；检索无依据时明确说明未找到依据。该页面是本体问答的联调入口，不扩展为通用聊天平台；资料与候选治理在同一前端提供独立的最小管理页面。
 
 ## 本地部署与验证
 
@@ -96,6 +109,6 @@ MVP 验收按以下证据层次记录，不能以静态配置或服务健康检�
 2. 审核前普通查询不可见；甲乙各自审核并发布后，JSON API 与 MCP 可按 ID 和搜索读到本企业知识，跨企业 ID、关系及来源片段均不可读。乙方可查本企业成本与报价策略。
 3. 用一段初版 schema 无法表达、但有原文依据的新增测试资料，验证自动发现缺口、起草 YAML、生成 Python；完成 Git 审阅、测试、部署后，激活前仍用旧版抽取，执行 `activate-schema` 后新任务使用新版。无效激活不得留下半更新的指针或审计。
 4. 在真实 Fuseki/TDB2 故障注入与并发读取中证明发布原子性；失败时仍读完整旧版。新旧快照、来源、schema 版本与审计能在重启和恢复后核对。
-5. 使用测试账号在浏览器打开 Agent 页面，提问笔记本知识并核对答案、条目 ID、来源与版本；询问无依据问题时显示无依据。另行验证 API、MCP 和 Agent 三个入口使用同一企业范围。
+5. 前端构建通过后，使用测试账号在浏览器打开候选审核与 Agent 页面；提问笔记本知识并核对答案、条目 ID、来源与版本，询问无依据问题时显示无依据。另行验证 API、MCP 和 Agent 三个入口使用同一企业范围。可视化图编辑不列入本次验收。
 
-技术依据：[LinkML Pydantic 生成器](https://linkml.io/linkml/generators/pydantic.html)、[Apache Jena Fuseki Docker 与持久卷](https://jena.apache.org/documentation/fuseki2/fuseki-plain)、[TDB2/Fuseki](https://jena.apache.org/documentation/tdb2/tdb2_fuseki.html)、[LangGraph Graph API](https://docs.langchain.com/oss/python/langgraph/quickstart)。
+技术依据：[LinkML Pydantic 生成器](https://linkml.io/linkml/generators/pydantic.html)、[Apache Jena Fuseki Docker 与持久卷](https://jena.apache.org/documentation/fuseki2/fuseki-plain)、[TDB2/Fuseki](https://jena.apache.org/documentation/tdb2/tdb2_fuseki.html)、[LangGraph Graph API](https://docs.langchain.com/oss/python/langgraph/quickstart)、[Ontosphere 依赖清单](https://github.com/ThHanke/ontosphere/blob/main/package.json)。
