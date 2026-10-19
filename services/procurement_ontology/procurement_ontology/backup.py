@@ -104,6 +104,9 @@ class BackupManager:
         manifest_path = Path(manifest_path).resolve()
         root = manifest_path.parent
         manifest = BackupManifest.model_validate_json(manifest_path.read_text(encoding="utf-8"))
+        if (self.store.dataset_prefix.startswith(manifest.source_dataset_prefix)
+                or manifest.source_dataset_prefix.startswith(self.store.dataset_prefix)):
+            raise ValueError("恢复前缀不能与备份源前缀相同或互为前缀，请使用独立前缀")
         sqlite_path = self._checked_file(root, manifest.sqlite, "control.sqlite3")
         records = {record.scope_id: record for record in manifest.datasets}
         if len(records) != len(manifest.datasets) or "platform" not in records:

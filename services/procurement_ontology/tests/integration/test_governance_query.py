@@ -10,6 +10,7 @@ from test_store import current_platform_versions, source, store
 from procurement_ontology.identity import Identity
 from procurement_ontology.models import Applicability, Candidate, ExtractionRun, KnowledgeItem, PublishedSnapshot, SourceSpan
 from procurement_ontology.schema_loader import load_registered_template
+from procurement_ontology.store import VersionConflict
 
 BUYER = Identity("buyer", "test_buyer1", "company_admin")
 SUPPLIER = Identity("supplier", "test_supplier1", "company_admin")
@@ -215,3 +216,50 @@ def test_case_threshold_requires_project_scope(services):
     item.properties = {"case_threshold": "本项目要求三年保修", "condition_category": "technical"}
     with pytest.raises(ValueError, match="项目"):
         governance.edit_item(BUYER, {"op": "add_item", "item": item.model_dump(mode="json")}, query.versions(BUYER))
+
+
+def test_stale_candidate_batch_can_explicitly_restart_review(services):
+    governance, query, store = services
+    first, _ = propose(services)
+    second, _ = propose(services, identifier="item2", revision="src2")
+    first_batch = governance.review(BUYER, "candidate-item1", "ACCEPTED")
+    second_batch = governance.review(BUYER, "candidate-item2", "ACCEPTED")
+    governance.publish(BUYER, "ontology", first_batch.id)
+    with pytest.raises(VersionConflict):
+        governance.publish(BUYER, "ontology", second_batch.id)
+    with pytest.raises(VersionConflict):
+        governance.review(BUYER, "candidate-item2", "REJECTED")
+    with pytest.raises(PermissionError):
+        governance.restart_review(Identity("reader", BUYER.scope_id, "reader"), second_batch.id, query.versions(BUYER))
+    with pytest.raises(VersionConflict):
+        governance.restart_review(BUYER, second_batch.id, second_batch.base_versions)
+    assert store.read_change_batch(BUYER.scope_id, second_batch.id).decisions
+    restarted = governance.restart_review(BUYER, second_batch.id, query.versions(BUYER))
+    assert restarted.base_versions == query.versions(BUYER)
+    assert restarted.decisions == {} and restarted.candidate_ids == second.candidate_ids
+    assert restarted.audit[:-1] == second_batch.audit
+    assert restarted.audit[-1]["action"] == "restart_review"
+    with pytest.raises(ValueError, match="未审核"):
+        governance.publish(BUYER, "ontology", restarted.id)
+    governance.review(BUYER, "candidate-item2", "ACCEPTED")
+    governance.publish(BUYER, "ontology", restarted.id)
+    assert query.search(BUYER, "", "computer")["count"] == 2
+    with pytest.raises(ValueError):
+        governance.restart_review(BUYER, restarted.id, query.versions(BUYER))
+
+
+@pytest.mark.parametrize("operation", ["add_node", "update_node"])
+def test_category_key_cannot_rebind_published_knowledge(services, operation):
+    governance, query, _ = services
+    propose(services)
+    batch = governance.review(BUYER, "candidate-item1", "ACCEPTED")
+    governance.publish(BUYER, "ontology", batch.id)
+    node = {"id": "other-category", "label": "其他电脑", "level": 3, "parent_id": "test_buyer1:office"}
+    if operation == "update_node":
+        batch = governance.edit_tree(BUYER, {"op": "add_node", "node": node}, query.versions(BUYER))
+        governance.publish(BUYER, "tree", batch.id)
+    before = query.tree(BUYER)
+    with pytest.raises(ValueError, match="品类键"):
+        governance.edit_tree(BUYER, {"op": operation, "node": node, "category_key": "computer"}, before["versions"])
+    assert query.tree(BUYER) == before
+    assert query.search(BUYER, "", "computer")["count"] == 1

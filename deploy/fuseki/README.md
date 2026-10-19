@@ -61,4 +61,4 @@ uv run --project services/procurement_ontology pytest services/procurement_ontol
 - 上述真实事务测试命令：`4 passed`。包含运行时 LOAD 失败回滚、并发读完整性、同基础版条件发布唯一成功及匿名数据访问拒绝。
 - 全服务测试在显式设置 `FUSEKI_TEST_URL` 时为 `32 passed`；此数字只对应当前已实现的领域、身份、schema 加载和事务前提测试。
 
-重启、完整业务发布和双备份恢复尚未完成验收；这些结果不能由本次原子性测试推断。
+2026-10-20 已另行完成完整业务发布、实际 Docker 重启和 CLI 双库备份恢复。结果及证据见[本地技术验收记录](../../docs/procurement-ontology/acceptance-2026-10-20.md)，不由本次原子性测试推断。

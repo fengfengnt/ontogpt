@@ -68,6 +68,23 @@ class GovernanceService:
             return batch
 
     @business_write
+    def restart_review(self, identity, batch_id, observed_version):
+        authorize(identity, identity.scope_id, "review")
+        with self._lock:
+            pair = self._pair(identity, observed_version)
+            batch = self.store.read_change_batch(identity.scope_id, batch_id)
+            if batch is None:
+                raise KeyError("批次不存在")
+            if batch.status != "PENDING" or batch.kind != "ontology" or not batch.candidate_ids or batch.changes:
+                raise ValueError("只能重新审核未发布的候选批次")
+            self._audit(batch, identity, "restart_review", previous_versions=batch.base_versions,
+                        discarded_decisions=len(batch.decisions))
+            batch.base_versions = version_pair(pair)
+            batch.decisions = {}
+            self.store.save_change_batch(identity.scope_id, batch)
+            return batch
+
+    @business_write
     def edit_item(self, identity, change, observed_version):
         return self._edit(identity, "ontology", change, observed_version)
 
@@ -120,7 +137,11 @@ class GovernanceService:
             else:
                 records[index] = copy.deepcopy(change[target])
             if target == "node" and change.get("category_key"):
-                payload.setdefault("category_keys", {})[change["category_key"]] = identifier
+                category_key = change["category_key"]
+                keys = payload.setdefault("category_keys", {})
+                if not isinstance(category_key, str) or (category_key in keys and keys[category_key] != identifier):
+                    raise ValueError("二级品类键已绑定其他节点，不能重绑定")
+                keys[category_key] = identifier
         return payload
 
     def _evidence(self, scope_id, record):

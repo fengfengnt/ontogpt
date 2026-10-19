@@ -15,6 +15,7 @@
 | [前端设计](frontend-design.md) | 企业画布、树菜单、平台管理入口如何区分，后续如何改风格？ |
 | [甲乙 schema 设计](schemas/README.md) | 两家公司的提取规范、字段和关系有什么差异？ |
 | [评审与验收矩阵](review-and-validation.md) | 每项要求对应哪项任务，用什么证据验收？ |
+| [实施决策及审查处理](implementation-decisions.md) | 实施中的取舍、独立审查问题与暂缓项是什么？ |
 | [本地技术验收记录](acceptance-2026-10-20.md) | 哪些检查实际通过，哪些仍待业务审核？ |
 | [实施计划](../superpowers/plans/2026-10-19-procurement-ontology-mvp.md) | 按什么顺序实施，每步怎样验证？ |
 

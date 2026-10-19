@@ -113,6 +113,10 @@ sequenceDiagram
 
 搜索后再读取详情时携带所见版本对；若任何指针已变化，返回 `409 VERSION_CHANGED`，要求刷新搜索。待审批次修改带基础版本；过期提交返回 `409 STALE_BASE_VERSION`，不能覆盖新发布结果。历史读取仅用于授权管理和审计，不混入普通搜索。
 
+候选批次过期后，企业管理员可显式执行 `POST /v1/manage/batches/{id}/restart-review`，携带最新 `observed_version`。服务仅处理未发布的候选批次：保留旧审计，更新基础版本并清空旧决定，再要求逐条审核。旧版直接发布仍拒绝。
+
+三级树的已绑定 `category_key` 只能继续指向原节点，禁止新增/更新节点时静默重绑定。
+
 ## 7. 提取、重试与审核状态
 
 ```mermaid
@@ -129,6 +133,8 @@ flowchart LR
 ```
 
 运行状态使用 `PENDING → RUNNING → SUCCEEDED/FAILED`。进程重启把遗留 `RUNNING` 标记为中断失败，保留来源和已记录诊断，允许显式重试。重试去重以来源修订、schema 版本和抽取语义为依据；切换 schema 后可以产生新运行，但不能重复发布同一候选。
+
+失败重试沿用 run ID，但分配新候选批次，保留旧失败批次作为审计；成功运行重复请求不调用模型。
 
 证据状态与审核状态分别记录。候选可处于 `PENDING_REVIEW`、`ACCEPTED`、`REJECTED`；缺少原文依据的内容标为 `MODEL_SUGGESTION` 并保持待补证，不能靠点击“采纳”跳过证据检查。
 
@@ -167,6 +173,7 @@ flowchart LR
 | `POST /v1/manage/sources/{id}/extract` | 请求携带本企业 `category_key`，创建提取运行；返回运行 ID，状态从运行详情读取。 |
 | `GET /v1/manage/runs/{id}`、`GET /v1/manage/batches/{id}` | 本企业提取和待审批次状态。 |
 | `POST /v1/manage/batches/{id}/reviews` | 采纳、修订、拒绝和补证。 |
+| `POST /v1/manage/batches/{id}/restart-review` | 观察版本核验后清空旧决定，按当前版本重新审核。 |
 | `GET/POST /v1/manage/tree`、`POST /v1/manage/ontology/changes` | 企业树变更和企业本体变更；分别校验请求操作类型。 |
 | `POST /v1/manage/batches/{id}/publish` | 发布本企业已验证批次。 |
 | `/v1/platform/tree`、`/v1/platform/ontology/changes`、`/v1/platform/batches/{id}/publish` | 平台专用读取、编辑和发布；不接受企业数据域。 |
@@ -192,6 +199,6 @@ MCP 只暴露 `search_ontology_items(query, category_key)` 和 `get_ontology_ite
 
 维护窗口先拒绝新写入，再等待进行中的写入结束，然后备份 SQLite 及平台、企业 Fuseki 数据集。备份清单记录 schema 部署版本、各数据集、文件摘要和时间，运行模型密钥不打包进备份文件。
 
-恢复先验证清单完整性和摘要，再恢复 SQLite 与所有关联数据集；缺少任一部分拒绝作为完整恢复。恢复到本项目指定目标，不能覆盖其他服务的卷。验收核对当前指针、历史版、来源、草案/审核状态、schema 启用指针和操作人审计。
+目标前缀必须与备份源前缀不重叠，不能相同或互为前缀，避免后续备份混入恢复库。恢复先验证清单完整性和摘要，再恢复 SQLite 与所有关联数据集；缺少任一部分拒绝作为完整恢复。恢复到本项目指定目标，不能覆盖其他服务的卷。验收核对当前指针、历史版、来源、草案/审核状态、schema 启用指针和操作人审计。
 
 MVP 未引入跨实例协调或分布式任务系统；如果以后部署多个服务写入进程，需要重新设计维护窗口协调、提取任务持久执行和发布并发控制。当前实现不能凭单进程测试宣称支持多实例部署。

@@ -42,6 +42,8 @@ PROCUREMENT_MAX_OUTPUT_TOKENS=16384
 4. Schema 缺口生成独立 `codex/schema-draft/` 工作树中的新版本 YAML/Python。人工 Git 审阅、生成一致性和业务回归测试通过后，部署新产物及摘要注册项。
 5. 审核人使用本企业管理会话执行下列命令；部署本身不会切换启用版本。
 
+候选批次遇到 `409 STALE_BASE_VERSION` 时，在“候选审核”选择该批次，显式执行“按当前版本重新审核（清空旧决定）”。服务校验最新观察版本，保留旧审计并清空旧决定，须逐条重新审核；不会自动沿用旧决定或放宽冲突检查。三级树已绑定的二级品类键不能改绑到其他节点。
+
 ```powershell
 $env:PROCUREMENT_ADMIN_TOKEN_FILE = '本机已保护的管理会话令牌文件路径'
 uv run --project services/procurement_ontology activate-schema test_buyer1 computer v1
@@ -63,18 +65,18 @@ MCP 地址为 `http://127.0.0.1:8002/mcp/`，使用企业绑定的独立服务�
 
 ```powershell
 uv run --project services/procurement_ontology procurement-service backup --destination 'D:/Backups/procurement/2026-10-20'
-uv run --project services/procurement_ontology procurement-service restore 'D:/Backups/procurement/2026-10-20/manifest.json' --destination 'D:/ProcurementRuntime/restored-20261020' --dataset-prefix procurement_restore_20261020_
+uv run --project services/procurement_ontology procurement-service restore 'D:/Backups/procurement/2026-10-20/manifest.json' --destination 'D:/ProcurementRuntime/restored-20261020' --dataset-prefix restored20261020_
 ```
 
 备份目录必须尚不存在。备份包含 SQLite 和本项目前缀下的全部 Fuseki 数据集，以 N-Quads 保留默认图和具名图；记录 SHA-256、当前版本和部署注册表，最后才写 `manifest.json`。具体四元组协议见 [Jena 官方说明](https://jena.apache.org/documentation/fuseki2/fuseki-config-endpoint)。
 
-恢复先核验所有文件、SQLite 完整性和已部署 schema 摘要，再导入**空运行目标和空数据集前缀**。不会覆盖当前库或其他服务卷。逐图核对 RDF 等价性和当前指针后才生成完成记录；中途失败留下 `restore.incomplete`，服务拒绝启动该目标。失败目标保留供检查，重试使用另一个空目标。
+目标数据集前缀不能与备份源前缀相同或互为前缀，导入前即拒绝重叠配置。恢复先核验所有文件、SQLite 完整性和已部署 schema 摘要，再导入**空运行目标和空数据集前缀**。不会覆盖当前库或其他服务卷。逐图核对 RDF 等价性和当前指针后才生成完成记录；中途失败留下 `restore.incomplete`，服务拒绝启动该目标。失败目标保留供检查，重试使用另一个空目标。
 
 完成后设置以下环境变量，再启动恢复目标：
 
 ```powershell
 $env:PROCUREMENT_RUNTIME_DIR = 'D:/ProcurementRuntime/restored-20261020'
-$env:PROCUREMENT_DATASET_PREFIX = 'procurement_restore_20261020_'
+$env:PROCUREMENT_DATASET_PREFIX = 'restored20261020_'
 uv run --project services/procurement_ontology procurement-service serve --port 8002
 ```
 

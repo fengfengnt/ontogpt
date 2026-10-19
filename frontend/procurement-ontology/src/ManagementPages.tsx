@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, message, type Batch, type Item, type Source, type Tree } from './api';
+import { ApiError, api, message, type Batch, type Item, type Source, type Tree } from './api';
 import KnowledgeEditor, { kindLabels } from './KnowledgeEditor';
 
 export function SourcesPage({ onReview }: { onReview: (id: string) => void }) {
@@ -58,6 +58,7 @@ export function ReviewPage({ initialBatch, onPending }: { initialBatch?: string;
   const [editing, setEditing] = useState<any>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [conflict, setConflict] = useState(false);
   useEffect(() => { Promise.all([api('/v1/manage/runs'), api('/v1/manage/sources'), api('/v1/manage/tree'), api('/v1/manage/schemas/active')])
     .then(([r, s, t, schema]) => { setRuns(r.filter((run: any) => run.status === 'SUCCEEDED')); setSources(s); setTree(t); setSchema(schema); })
     .catch(e => setError(message(e))); }, []);
@@ -67,13 +68,25 @@ export function ReviewPage({ initialBatch, onPending }: { initialBatch?: string;
     try {
       const batch = await api(`/v1/manage/batches/${batchId}/reviews`, { method: 'POST', body: { candidate_id: candidate.id, decision, ...(corrected ? { corrected } : {}) } });
       setResult(await api('/v1/manage/batches/' + batchId)); setEditing(undefined); onPending(batch);
-    } catch (e) { setError(message(e)); throw e; } finally { setBusy(false); }
+    } catch (e) { setError(message(e)); if (e instanceof ApiError && e.status === 409) setConflict(true); throw e; } finally { setBusy(false); }
   }
+  const stale = result?.batch?.status === 'PENDING' && (conflict || (tree &&
+    (tree.versions.tree !== result.batch.base_versions.tree || tree.versions.ontology !== result.batch.base_versions.ontology)));
   return <>
-    <label>选择提取批次<select value={batchId} onChange={e => { setBatchId(e.target.value); setEditing(undefined); }}>
+    <label>选择提取批次<select value={batchId} onChange={e => { setBatchId(e.target.value); setEditing(undefined); setConflict(false); }}>
       <option value="">请选择</option>{runs.map(run => <option key={run.id} value={run.batch_id}>{run.schema_version} · {run.id.slice(-12)} · {run.candidate_ids.length} 个候选</option>)}
     </select></label>
     {error && <p role="alert" className="alert error">{error}</p>}
+    {stale && <section className="panel"><p>本批次基础版本已过期。重新审核将清空旧决定，保留历史审计；请逐条重新核对后发布。</p>
+      <button disabled={busy} onClick={async () => {
+        setBusy(true); setError('');
+        try {
+          const current = await api('/v1/manage/tree');
+          const batch = await api(`/v1/manage/batches/${batchId}/restart-review`, { method: 'POST', body: { observed_version: current.versions } });
+          setTree(current); setResult(await api('/v1/manage/batches/' + batchId)); setEditing(undefined); setConflict(false); onPending(batch);
+        } catch (e) { setError(message(e)); } finally { setBusy(false); }
+      }}>按当前版本重新审核（清空旧决定）</button>
+    </section>}
     <div className="two-col"><section className="panel"><h2>候选审核</h2>
       <p className="muted">采纳表示完成本条人工核对，发布仍需独立执行。无法定位原文的建议须先补证。</p>
       {result?.candidates.map((candidate: any) => {
@@ -88,9 +101,9 @@ export function ReviewPage({ initialBatch, onPending }: { initialBatch?: string;
           {item.properties && <dl>{Object.entries(item.properties).filter(([, value]) => value != null).map(([key, value]) => <div key={key}><dt className="muted">{key}</dt><dd>{String(value)}</dd></div>)}</dl>}
           {item.subject_id && <p className="version">{item.subject_id} → {item.object_id}</p>}
           {result.batch?.status !== 'PUBLISHED' && <div className="toolbar">
-            <button disabled={busy || !item.source_spans.length} onClick={() => review(candidate, 'ACCEPTED').catch(() => {})}>采纳</button>
-            {item.kind && <button disabled={busy} onClick={() => setEditing({ ...candidate, item })}>修订与补证</button>}
-            <button className="danger" disabled={busy} onClick={() => review(candidate, 'REJECTED').catch(() => {})}>拒绝</button>
+            <button disabled={busy || stale || !item.source_spans.length} onClick={() => review(candidate, 'ACCEPTED').catch(() => {})}>采纳</button>
+            {item.kind && <button disabled={busy || stale} onClick={() => setEditing({ ...candidate, item })}>修订与补证</button>}
+            <button className="danger" disabled={busy || stale} onClick={() => review(candidate, 'REJECTED').catch(() => {})}>拒绝</button>
           </div>}
         </article>;
       })}

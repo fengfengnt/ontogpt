@@ -75,6 +75,26 @@ def test_restore_keeps_pointer_source_history_and_audit(environment, target, tmp
     assert not (target.identities.path.parent / "restore.incomplete").exists()
 
 
+@pytest.mark.parametrize("direction", ["descendant", "ancestor"])
+def test_restore_rejects_overlapping_prefix_before_import(environment, target, tmp_path, direction):
+    manager, *_ = environment
+    manager.backup_service(tmp_path / "backup")
+    original_prefix = target.store.dataset_prefix
+    overlap = manager.store.dataset_prefix + "restored_" if direction == "descendant" else manager.store.dataset_prefix[:-1]
+    target.store.dataset_prefix = overlap
+    try:
+        with pytest.raises(ValueError, match="前缀"):
+            target.restore_service(tmp_path / "backup/manifest.json")
+        assert not (target.identities.path.parent / "restore.incomplete").exists()
+        if direction == "descendant":
+            assert target.store.list_dataset_scopes() == []
+    finally:
+        if direction == "descendant":
+            for scope in ("platform", "test_buyer1"):
+                target.store.session.delete(f"{target.store.base_url}/$/datasets/{overlap}{scope}", timeout=30)
+        target.store.dataset_prefix = original_prefix
+
+
 @pytest.mark.parametrize("missing", ["sqlite", "dataset"])
 def test_incomplete_backup_is_rejected(environment, target, tmp_path, missing):
     manager, *_ = environment

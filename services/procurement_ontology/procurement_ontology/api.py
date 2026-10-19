@@ -64,6 +64,10 @@ class ReviewInput(DomainModel):
     corrected: dict | None = None
 
 
+class RestartReviewInput(DomainModel):
+    observed_version: dict[str, str]
+
+
 class PublishInput(DomainModel):
     kind: Literal["tree", "ontology"]
 
@@ -284,6 +288,10 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
         if data.candidate_id not in {candidate.id for candidate in store.read_batch(actor.scope_id, batch_id)}:
             raise KeyError()
         return governance.review(actor, data.candidate_id, data.decision, corrected=data.corrected)
+
+    @app.post("/v1/manage/batches/{batch_id}/restart-review")
+    def restart_review(batch_id: str, data: RestartReviewInput, actor: Scoped):
+        return governance.restart_review(actor, batch_id, data.observed_version)
 
     @app.get("/v1/manage/tree")
     @app.get("/v1/platform/tree")

@@ -61,6 +61,24 @@ def test_platform_cannot_read_company(application):
     assert client.get("/v1/platform/tree").status_code == 403
 
 
+def test_api_explicit_restart_preserves_stale_publish_guard(application):
+    client, app, identities, actors, _ = application
+    batches = []
+    for suffix in ("A", "B"):
+        source = client.post("/v1/manage/sources", json={"text": "原厂上门 " + suffix, "simulated": True}).json()
+        run = client.post(f"/v1/manage/sources/{source['id']}/extract", json={"category_key": "computer"}).json()
+        reviewed = client.post(f"/v1/manage/batches/{run['batch_id']}/reviews",
+                               json={"candidate_id": run["candidate_ids"][0], "decision": "ACCEPTED"})
+        assert reviewed.status_code == 200
+        batches.append(reviewed.json())
+    assert client.post(f"/v1/manage/batches/{batches[0]['id']}/publish", json={"kind": "ontology"}).status_code == 200
+    assert client.post(f"/v1/manage/batches/{batches[1]['id']}/publish", json={"kind": "ontology"}).status_code == 409
+    current = client.get("/v1/manage/tree").json()["versions"]
+    response = client.post(f"/v1/manage/batches/{batches[1]['id']}/restart-review", json={"observed_version": current})
+    assert response.status_code == 200
+    assert response.json()["base_versions"] == current and response.json()["decisions"] == {}
+
+
 def test_company_provision_retry(application):
     client, app, identities, actors, platform = application
     before = app.state.query.versions(actors["test_buyer1"])
