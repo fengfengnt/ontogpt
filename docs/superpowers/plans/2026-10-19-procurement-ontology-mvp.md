@@ -76,12 +76,12 @@
 
 **Files:** Create `services/procurement_ontology/procurement_ontology/identity.py`, `tests/unit/test_identity.py`.
 
-**Interfaces:** `IdentityStore(sqlite_path)` 提供 `bootstrap_admin(credentials)`, `create_company(id)`, `create_account(company_id, role, credentials)`, `authenticate(credentials) -> Identity`；`authorize(identity, scope_id, action) -> None` 执行数据域检查。`bootstrap_admin` 只在没有平台管理员时可用。`Identity` 带不可由请求覆盖的 `scope_id`（`platform` 或企业 ID）和角色。平台管理员可执行企业开通操作，但不能借此读写企业知识。
+**Interfaces:** `IdentityStore(sqlite_path)` 提供 `bootstrap_admin(credentials)`, `create_company(id, actor)`, `create_account(company_id, role, credentials, actor)`, `authenticate(credentials) -> Identity`；`authorize(identity, scope_id, action) -> None` 执行数据域检查。`bootstrap_admin` 只在没有平台管理员时可用。创建企业/账号显式接收服务端已认证操作者；平台只能在初始化时创建首个企业管理员。`Identity` 带不可由请求覆盖的 `scope_id`（`platform` 或企业 ID）和角色。
 
-- [ ] 写 `test_bootstrap_admin_is_one_time`、`test_identity_scope_is_server_owned`、`test_platform_cannot_read_company_knowledge`：`assert identity.scope_id == "test_buyer1"`，重复初始化、伪造目标企业和平台访问企业知识均被拒绝；凭据明文不出现在 SQLite。
-- [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_identity.py -q`，期望失败。
-- [ ] 实现 SQLite 账户/会话存储、密码散列、权限检查和一人一企业绑定；保留企业开通审计。
-- [ ] 重跑测试，期望通过；提交本任务文件。
+- [x] 写 `test_bootstrap_admin_is_one_time`、`test_identity_scope_is_server_owned`、`test_platform_cannot_read_company_knowledge`：`assert identity.scope_id == "test_buyer1"`，重复初始化、伪造目标企业和平台访问企业知识均被拒绝；凭据明文不出现在 SQLite。
+- [x] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_identity.py -q`，观察 13 项缺少身份实现的失败。
+- [x] 实现 SQLite 账户/会话存储、密码散列、权限检查和一人一企业绑定；保留企业开通审计。
+- [x] 重跑测试 13 项通过，服务全套 22 通过、4 项真实 Fuseki 测试尚未配置时跳过；提交本任务文件。
 
 ### Task 4: Fuseki 数据集、版本与新企业初始化
 
