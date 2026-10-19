@@ -73,7 +73,7 @@ export default function OntologyCanvas({ onPending, readOnly = false, headless =
         ...preview.items.map(item => ({ data: { id: item.id, label: item.label + '\n' + (kindLabels[item.kind] ?? item.kind) }, classes: preview.statuses.get(item.id) ?? '' })),
         ...preview.relations.filter(relation => ids.has(relation.subject_id) && ids.has(relation.object_id))
           .map(relation => ({ data: { id: relation.id, source: relation.subject_id, target: relation.object_id, label: relation.predicate }, classes: preview.statuses.get(relation.id) ?? '' })),
-      ], layout: { name: 'cose', animate: false, padding: 35 },
+      ], layout: { name: 'breadthfirst', directed: true, animate: false, padding: 35 },
       style: headless ? undefined : [
         { selector: 'node', style: { 'background-color': css('--graph-node-fill'), color: css('--graph-node-text'),
           label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': '130px', 'font-family': css('--font-body'),

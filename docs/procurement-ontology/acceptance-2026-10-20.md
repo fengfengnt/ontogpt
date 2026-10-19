@@ -88,7 +88,7 @@ npm run build --prefix frontend/procurement-ontology
 git diff --check
 ```
 
-实际结果：服务全套 **113 passed、1 skipped**；跳过项是默认不触发付费调用的真实模型贯通测试。77 个依赖弃用警告，主要为 RDFLib N-Quads 内部 `default_context`，另有已有依赖警告。前端 **11 passed**，生产构建通过。根工程原有离线单元基线 **69 passed、10 skipped**；未盲跑需要外部模型的根集成测试。
+实际结果：服务全套 **113 passed、1 skipped**；跳过项是默认不触发付费调用的真实模型贯通测试。77 个依赖弃用警告，主要为 RDFLib N-Quads 内部 `default_context`，另有已有依赖警告。前端 **12 passed**，生产构建通过。根工程原有离线单元基线 **69 passed、10 skipped**；未盲跑需要外部模型的根集成测试。
 
 真实模型贯通单独显式运行，结果 **1 passed in 76.80s**：
 
@@ -102,8 +102,10 @@ uv run --project services/procurement_ontology pytest services/procurement_ontol
 
 ## 7. 独立整分支审查与修复
 
-独立审查复跑 49 项存储、治理、身份/查询、提取、激活和恢复测试通过，发现 3 项 Important、无 Critical：过期候选批次无法继续审核、重复品类键覆盖检索入口、恢复前缀重叠污染后续备份。三项均先用隔离真实 TDB2 或界面测试复现，再修复；后端针对性回归 6 passed、前端全套 11 passed、生产构建通过。修复后服务全套 113 passed、1 skipped。未进行第二次审查，不把实现者验证写成独立复审。
+独立审查复跑 49 项存储、治理、身份/查询、提取、激活和恢复测试通过，发现 3 项 Important、无 Critical：过期候选批次无法继续审核、重复品类键覆盖检索入口、恢复前缀重叠污染后续备份。三项均先用隔离真实 TDB2 或界面测试复现，再修复；后端针对性回归 6 passed、前端全套 12 passed、生产构建通过。修复后服务全套 113 passed、1 skipped。未进行第二次审查，不把实现者验证写成独立复审。
 
 审核重启是明确的用户操作，清空旧决定并保留审计，仍拒绝直接发布旧版本。品类键拒绝绑定到其他节点。恢复在导入前拒绝源/目标前缀相同或互为前缀。
 
 暂缓 1 项 Minor：MCP 对“另一企业实际存在记录”的专门负向覆盖尚缺；已有代码共享授权查询与实际 API 越权测试，独立审查未发现当前越权实现。完整决定、未判断边界与代价见[实施决策](implementation-decisions.md)。
+
+迁移后再次在当前工程实操浏览器，发现随机 CoSE 布局偶尔重叠矩形节点；使用真实 Cytoscape 引擎和固定随机序列复现后，改为确定性的 breadthfirst 有向布局。前端全套 12 passed、生产构建通过；该修复不改变本体数据、版本或权限。
