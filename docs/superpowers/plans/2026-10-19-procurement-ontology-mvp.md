@@ -111,10 +111,10 @@
 
 **Interfaces:** `SchemaCatalog.active(company_id, category_key) -> TemplateBinding`；`activate_schema(identity, company_id, category_key, version) -> ActivationRecord` 验证目标企业、部署文件/哈希、根类和生成模块，在一个 SQLite 事务中更新指针与操作者/时间审计。CLI 暴露 `activate-schema <公司> <二级品类> <版本>`。
 
-- [ ] 写 `test_activation_is_atomic`、`test_wrong_company_and_missing_artifact_fail`：`assert active.version == "v1"` 只在审计也增加后成立；失败时两表行数及指针不变。
-- [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_schema_activation.py -q`，期望失败。
-- [ ] 实现受控激活命令与事务；测试运行中已取得的 `TemplateBinding` 不随指针切换改变。
-- [ ] 重跑测试，期望通过；提交本任务文件。
+- [x] 写事务审计失败回滚、越权/缺失版本、部署不等于启用、旧 binding 固定和 CLI 带身份调用服务测试。
+- [x] 运行新测试确认 5 项因缺少激活实现而失败。
+- [x] 实现受控激活命令与事务；运行中取得的 `TemplateBinding` 不随指针切换改变。CLI 仅调用服务，不直接写 SQLite。
+- [x] 激活测试 5 项通过，CLI 帮助入口可运行；含真实 Fuseki 的服务全套 45 项通过。真实管理 API 联调在 Task 10 验证。
 
 ### Task 7: 原文修订、实际模型提取与证据定位
 
