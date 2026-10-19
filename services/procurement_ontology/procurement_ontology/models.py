@@ -144,3 +144,17 @@ class ExtractionRun(DomainModel):
     error_code: str | None = None
     started_at: datetime = Field(default_factory=utc_now)
     finished_at: datetime | None = None
+
+
+class ChangeBatch(DomainModel):
+    id: str
+    kind: Literal["tree", "ontology"]
+    scope_id: str
+    base_versions: dict[str, str]
+    changes: list[dict[str, Any]] = Field(default_factory=list)
+    decisions: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    candidate_ids: list[str] = Field(default_factory=list)
+    audit: list[dict[str, Any]] = Field(default_factory=list)
+    status: Literal["PENDING", "PUBLISHED"] = "PENDING"
+    created_by: str
+    created_at: datetime = Field(default_factory=utc_now)

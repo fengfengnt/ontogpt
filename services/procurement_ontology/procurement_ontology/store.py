@@ -11,7 +11,7 @@ from pathlib import Path
 import requests
 from rdflib import Graph, Literal, RDF
 
-from .models import Candidate, ExtractionRun, PublishedSnapshot, SourceRevision, utc_now
+from .models import Candidate, ChangeBatch, ExtractionRun, PublishedSnapshot, SourceRevision, utc_now
 from .rdf_codec import NS, record_graph, snapshot_graph, uri
 
 
@@ -127,6 +127,30 @@ class FusekiStore:
         rows = self._query(scope_id, f"SELECT ?payload WHERE {{ GRAPH ?graph {{ ?graph a {NS.ExtractionRun.n3()}; {NS.latest_event.n3()} ?event. ?event {NS.payload.n3()} ?payload }} }}")["results"]["bindings"]
         return [ExtractionRun.model_validate_json(row["payload"]["value"]) for row in rows]
 
+    def save_change_batch(self, scope_id: str, batch: ChangeBatch) -> None:
+        if batch.scope_id != scope_id:
+            raise ValueError("Batch does not belong to scope")
+        graph_uri = uri(scope_id, "changes", batch.id)
+        event = uri(scope_id, "change-event", uuid.uuid4().hex)
+        graph = record_graph(event, batch.model_dump(mode="json"), "ChangeEvent")
+        self._update(scope_id, f"""
+          DELETE {{ GRAPH {graph_uri.n3()} {{ {graph_uri.n3()} {NS.latest_event.n3()} ?old }} }}
+          INSERT {{ GRAPH {graph_uri.n3()} {{ {graph.serialize(format='nt')}
+            {graph_uri.n3()} a {NS.ChangeBatch.n3()}; {NS.latest_event.n3()} {event.n3()}. }} }}
+          WHERE {{ OPTIONAL {{ GRAPH {graph_uri.n3()} {{ {graph_uri.n3()} {NS.latest_event.n3()} ?old }} }} }}
+        """)
+
+    def read_change_batch(self, scope_id: str, batch_id: str) -> ChangeBatch | None:
+        graph = uri(scope_id, "changes", batch_id)
+        rows = self._query(scope_id, f"SELECT ?payload WHERE {{ GRAPH {graph.n3()} {{ {graph.n3()} {NS.latest_event.n3()} ?event. ?event {NS.payload.n3()} ?payload }} }}")["results"]["bindings"]
+        if len(rows) > 1:
+            raise ValueError("Batch has multiple current events")
+        return ChangeBatch.model_validate_json(rows[0]["payload"]["value"]) if rows else None
+
+    def list_change_batches(self, scope_id: str) -> list[ChangeBatch]:
+        rows = self._query(scope_id, f"SELECT ?payload WHERE {{ GRAPH ?graph {{ ?graph a {NS.ChangeBatch.n3()}; {NS.latest_event.n3()} ?event. ?event {NS.payload.n3()} ?payload }} }}")["results"]["bindings"]
+        return [ChangeBatch.model_validate_json(row["payload"]["value"]) for row in rows]
+
     @staticmethod
     def _current_predicate(kind: str):
         if kind not in {"tree", "ontology"}:
@@ -150,7 +174,18 @@ class FusekiStore:
         value = self._read_json(scope_id, graph, graph)
         return PublishedSnapshot.model_validate(value) if value is not None else None
 
-    def publish(self, scope_id: str, kind: str, snapshot: PublishedSnapshot, expected_version: str | None) -> None:
+    def read_pair(self, scope_id: str) -> dict[str, PublishedSnapshot]:
+        control, root = uri(scope_id, "control", "current"), uri(scope_id, "root", "knowledge")
+        rows = self._query(scope_id, f"""SELECT ?tree ?ontology WHERE {{
+          GRAPH {control.n3()} {{ {root.n3()} {NS.current_tree.n3()} ?t; {NS.current_ontology.n3()} ?o. }}
+          GRAPH ?t {{ ?t {NS.payload.n3()} ?tree }} GRAPH ?o {{ ?o {NS.payload.n3()} ?ontology }}
+        }}""")["results"]["bindings"]
+        if len(rows) != 1:
+            raise ValueError("Current tree/ontology pair is unavailable")
+        return {kind: PublishedSnapshot.model_validate_json(rows[0][kind]["value"]) for kind in ("tree", "ontology")}
+
+    def publish(self, scope_id: str, kind: str, snapshot: PublishedSnapshot, expected_version: str | None,
+                *, expected_versions: dict[str, str] | None = None) -> None:
         predicate = self._current_predicate(kind)
         if snapshot.kind != kind or snapshot.previous_id != expected_version:
             raise ValueError("Snapshot kind/previous version does not match publication")
@@ -164,6 +199,8 @@ class FusekiStore:
         old_pattern = f"GRAPH {control.n3()} {{ {root.n3()} {predicate.n3()} {uri(scope_id, kind, expected_version).n3()} }}" if expected_version else ""
         delete = f"DELETE {{ {old_pattern} }}" if expected_version else ""
         where = old_pattern if expected_version else f"FILTER NOT EXISTS {{ GRAPH {control.n3()} {{ {root.n3()} {predicate.n3()} ?old }} }}"
+        if expected_versions:
+            where += " ".join(f" GRAPH {control.n3()} {{ {root.n3()} {self._current_predicate(other).n3()} {uri(scope_id, other, identifier).n3()} }}" for other, identifier in expected_versions.items())
         self._update(scope_id, f"""
             {delete}
             INSERT {{ GRAPH {control.n3()} {{ {root.n3()} {predicate.n3()} {version.n3()} }}

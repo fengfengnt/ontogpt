@@ -133,10 +133,10 @@
 
 **Interfaces:** `GovernanceService.review(identity, candidate_id, decision)`、`edit_item(identity, change, observed_version)`、`edit_tree(identity, change, observed_version)`、`publish(identity, kind, batch_id)`；`KnowledgeQuery.search(identity, text, category_key)` 与 `get(identity, item_id, observed_version=None)` 仅读本企业当前已发布版。`observed_version` 携带树和本体版本对，平台通用本体/树只能经平台身份编辑并发布。
 
-- [ ] 写 `test_unpublished_is_invisible`、`test_referenced_category_cannot_be_deleted`、`test_platform_and_company_write_scopes`、`test_observed_version_conflict`、`test_cost_conflict_is_not_silently_overwritten`：未审候选不可查，删被引用节点失败，平台不能改企业，树或本体换版后详情返回版本变化；600/1,200 元冲突不能静默覆盖。
-- [ ] 使用 Fuseki 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/integration/test_governance_query.py -q`，期望失败。
-- [ ] 实现审核轨迹、来源/范围/关系/唯一父级校验、待审批次和不可变发布；树节点先发布后才能被新本体引用，查询返回来源片段和实际版本。
-- [ ] 重跑集成测试，期望通过；提交本任务文件。
+- [x] 写未审不可见、分类引用、平台/企业域、版本冲突、600/1,200 元冲突、伪造证据、失败运行、schema 类型和发布恢复测试。
+- [x] 初始 9 项因治理实现缺失失败；手动 schema 类型校验和发布审计恢复测试分别观察到失败。
+- [x] 实现审核轨迹、来源/范围/关系/唯一父级校验、待审批次和不可变发布；查询用一次 RDF 查询固定树/本体版本对，发布同时比较两个指针。
+- [x] 真实治理集成测试和服务全套回归通过；发布审计与快照同事务保存，批次状态中断后可通过重试恢复。
 
 ### Task 9: 自动发现 schema 缺口并起草新版本
 
