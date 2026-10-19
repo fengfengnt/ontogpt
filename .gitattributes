@@ -2,3 +2,4 @@ tests/fixtures/procurement/laptop-purchase-case.md -text
 src/ontogpt/templates/company/**/*.yaml text eol=lf
 src/ontogpt/templates/company/**/*.py text eol=lf
 services/procurement_ontology/schema_registry.yaml text eol=lf
+services/procurement_ontology/tests/fixtures/supplier-laptop-bid-case.md -text

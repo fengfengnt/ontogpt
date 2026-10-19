@@ -105,6 +105,9 @@ class Candidate(DomainModel):
     id: str = Field(min_length=1)
     item: KnowledgeItem | KnowledgeRelation
     status: Literal["PENDING_REVIEW", "ACCEPTED", "REJECTED", "MODEL_SUGGESTION"] = "PENDING_REVIEW"
+    extraction_run_id: str | None = None
+    proposed_evidence_quote: str | None = None
+    model_notes: str | None = None
 
     @model_validator(mode="after")
     def require_evidence(self) -> Candidate:
@@ -123,3 +126,21 @@ class PublishedSnapshot(DomainModel):
     previous_id: str | None = None
     created_by: str
     created_at: datetime = Field(default_factory=utc_now)
+
+
+class ExtractionRun(DomainModel):
+    id: str
+    scope_id: str
+    revision_id: str
+    category_key: str
+    schema_version: str
+    yaml_sha256: str
+    python_sha256: str
+    batch_id: str
+    requested_by: str
+    status: Literal["PENDING", "RUNNING", "SUCCEEDED", "FAILED"] = "PENDING"
+    candidate_ids: list[str] = Field(default_factory=list)
+    unmapped_suggestions: list[dict[str, Any]] = Field(default_factory=list)
+    error_code: str | None = None
+    started_at: datetime = Field(default_factory=utc_now)
+    finished_at: datetime | None = None

@@ -5,12 +5,13 @@ from __future__ import annotations
 import copy
 import json
 import re
+import uuid
 from pathlib import Path
 
 import requests
 from rdflib import Graph, Literal, RDF
 
-from .models import Candidate, PublishedSnapshot, SourceRevision, utc_now
+from .models import Candidate, ExtractionRun, PublishedSnapshot, SourceRevision, utc_now
 from .rdf_codec import NS, record_graph, snapshot_graph, uri
 
 
@@ -99,6 +100,32 @@ class FusekiStore:
         graph = uri(scope_id, "batch", batch_id)
         rows = self._query(scope_id, f"SELECT ?payload WHERE {{ GRAPH {graph.n3()} {{ ?candidate a {NS.Candidate.n3()}; {NS.payload.n3()} ?payload }} }} ORDER BY ?candidate")["results"]["bindings"]
         return [Candidate.model_validate_json(row["payload"]["value"]) for row in rows]
+
+    def save_run(self, scope_id: str, run: ExtractionRun) -> None:
+        if run.scope_id != scope_id:
+            raise ValueError("Run does not belong to data scope")
+        graph_uri = uri(scope_id, "run", run.id)
+        event = uri(scope_id, "run-event", uuid.uuid4().hex)
+        graph = record_graph(event, run.model_dump(mode="json"), "RunEvent")
+        self._update(scope_id, f"""
+            DELETE {{ GRAPH {graph_uri.n3()} {{ {graph_uri.n3()} {NS.latest_event.n3()} ?old }} }}
+            INSERT {{ GRAPH {graph_uri.n3()} {{
+              {graph.serialize(format='nt')}
+              {graph_uri.n3()} a {NS.ExtractionRun.n3()}; {NS.latest_event.n3()} {event.n3()}.
+            }} }}
+            WHERE {{ OPTIONAL {{ GRAPH {graph_uri.n3()} {{ {graph_uri.n3()} {NS.latest_event.n3()} ?old }} }} }}
+        """)
+
+    def read_run(self, scope_id: str, run_id: str) -> ExtractionRun | None:
+        graph = uri(scope_id, "run", run_id)
+        rows = self._query(scope_id, f"SELECT ?payload WHERE {{ GRAPH {graph.n3()} {{ {graph.n3()} {NS.latest_event.n3()} ?event. ?event {NS.payload.n3()} ?payload }} }}")["results"]["bindings"]
+        if len(rows) > 1:
+            raise ValueError("Run has multiple current events")
+        return ExtractionRun.model_validate_json(rows[0]["payload"]["value"]) if rows else None
+
+    def list_runs(self, scope_id: str) -> list[ExtractionRun]:
+        rows = self._query(scope_id, f"SELECT ?payload WHERE {{ GRAPH ?graph {{ ?graph a {NS.ExtractionRun.n3()}; {NS.latest_event.n3()} ?event. ?event {NS.payload.n3()} ?payload }} }}")["results"]["bindings"]
+        return [ExtractionRun.model_validate_json(row["payload"]["value"]) for row in rows]
 
     @staticmethod
     def _current_predicate(kind: str):

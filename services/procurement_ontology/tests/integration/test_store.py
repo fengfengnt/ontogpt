@@ -152,6 +152,27 @@ def test_published_rdf_relation_can_be_joined_to_its_evidence(store):
     assert result["boolean"] is True
 
 
+def test_run_status_roundtrip_keeps_prior_events(store):
+    from procurement_ontology.models import ExtractionRun
+
+    store.provision_company("test_buyer1", current_platform_versions(store))
+    original = source("test_buyer1")
+    store.append_source("test_buyer1", original)
+    run = ExtractionRun(id="run1", scope_id="test_buyer1", revision_id="src1", category_key="computer",
+                        schema_version="v1", yaml_sha256="0" * 64, python_sha256="1" * 64,
+                        batch_id="batch1", requested_by="buyer-reviewer", status="RUNNING")
+    store.save_run("test_buyer1", run)
+    store.save_run("test_buyer1", run.model_copy(update={"status": "FAILED", "error_code": "INTERRUPTED"}))
+    assert store.read_run("test_buyer1", "run1").error_code == "INTERRUPTED"
+    assert len(store.list_runs("test_buyer1")) == 1
+    rows = store._query("test_buyer1", '''
+        SELECT (COUNT(?event) AS ?n) WHERE { GRAPH <urn:procurement:test_buyer1:run:run1> {
+          ?event a <urn:procurement:vocab:RunEvent>.
+        } }
+    ''')["results"]["bindings"]
+    assert rows[0]["n"]["value"] == "2"
+
+
 def test_publish_conflict_and_rollback(store, monkeypatch):
     from procurement_ontology.store import VersionConflict
 

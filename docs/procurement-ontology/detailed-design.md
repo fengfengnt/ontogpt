@@ -134,6 +134,8 @@ flowchart LR
 
 抽取适配器每次创建独立 `SPIRESEngine`，传入注册表加载的模板绑定，并在原始保存文本上重新核对证据。不得使用引擎清理后的字符偏移直接定位原文；不得让引擎日志输出乙方全文、成本和策略内容。
 
+实施验证发现现有 SPIRES 通用解析器会把嵌套 JSON 转成字符串，因此采购适配器复用 `SPIRESEngine.get_completion_prompt`，补充生成模型的 JSON Schema，再由企业对应的生成 Python 模型直接验证结构化响应。服务专用 `LLMClient` 子类关闭磁盘缓存和材料提示日志，模型错误记录为失败运行，不终止服务。失败/中断运行保留原文与状态事件；审核只接收成功运行的候选。
+
 ## 8. Schema 注册、草案与激活
 
 注册表以 `(company_id, category_key, schema_version)` 为键，登记相对 YAML/Python 路径、根类、文件 SHA-256、生成器版本及导入依赖摘要。目录扫描、文件修改时间和模型建议不决定当前启用版本。

@@ -120,12 +120,12 @@
 
 **Files:** Create `services/procurement_ontology/procurement_ontology/intake.py`, `extraction.py`, `tests/unit/test_extraction.py`, `tests/fixtures/supplier-laptop-bid-case.md`；沿用仓库根的 `tests/fixtures/procurement/laptop-purchase-case.md`。
 
-**Interfaces:** `IntakeService.submit(identity, text, simulated) -> SourceRevision`；`ExtractionService.extract(identity, revision_id, category_key) -> ExtractionRun` 固定当前启用 schema 的版本/哈希，通过仓库现有 `SPIRESEngine` 提取，再把输出映射为候选、关系与原文 `SourceSpan`。模型连接从服务配置取得。
+**Interfaces:** `IntakeService.submit(identity, text, simulated) -> SourceRevision`；`ExtractionService.extract(identity, revision_id, category_key) -> ExtractionRun` 固定当前启用 schema 的版本/哈希，复用 `SPIRESEngine` 提示构建和服务专用 `LLMClient`，由企业生成模型直接验证 JSON，再映射为候选、关系与原文 `SourceSpan`。服务关闭材料缓存和提示日志；运行状态追加事件并支持中断恢复。
 
-- [ ] 写 `test_buyer_and_supplier_use_own_schema`、`test_ambiguous_quote_stays_unverified`、`test_original_unicode_offsets`、`test_retry_keeps_one_run`：两份原文各绑定自己的 schema；重复摘录无唯一位置时不得形成可发布事实；中文、换行与非 BMP 字符的摘录仍定位到原文；任务开始后的指针变化不改本次版本。
-- [ ] 运行 `uv run --project services/procurement_ontology pytest services/procurement_ontology/tests/unit/test_extraction.py -q`，期望失败。
-- [ ] 从用户提供的乙方模拟案例复制测试资料并保留模拟标记；实现来源校验、抽取失败状态和重试去重；模型输出不得直接发布。
-- [ ] 重跑替身模型测试，期望通过；提交本任务文件。真实模型调用留在 Task 15 贯通验收单独记录。
+- [x] 写独立 schema、歧义证据、Unicode 偏移、重试、指针固定、租户隔离、材料缓存/日志、中断恢复及关系端点测试。
+- [x] 初始 8 项因提取服务缺失失败；客户端测试因模块缺失失败；真实存储运行事件测试因运行契约缺失失败。
+- [x] 乙方模拟资料按原字节复制，SHA-256 保持一致；实现来源校验、失败事件和重试去重，模型输出只进入候选。
+- [x] 替身模型与真实 Fuseki 运行事件测试通过；真实模型调用留在 Task 15 贯通验收单独记录。
 
 ### Task 8: 审核、企业/平台版本发布与授权查询
 
