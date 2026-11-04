@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .maintenance import WriteGate
+from .store import VersionConflict
 
 
 @dataclass(frozen=True)
@@ -96,6 +97,21 @@ class IdentityStore:
                 CREATE TABLE IF NOT EXISTS service_tokens (
                     token_hash TEXT PRIMARY KEY, account_id TEXT NOT NULL REFERENCES accounts(account_id),
                     expires_at REAL NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS sso_users (
+                    id TEXT PRIMARY KEY, issuer TEXT NOT NULL, subject TEXT NOT NULL,
+                    preferred_username TEXT NOT NULL, account_id TEXT UNIQUE REFERENCES accounts(account_id),
+                    created_at REAL NOT NULL, UNIQUE (issuer, subject)
+                );
+                CREATE TABLE IF NOT EXISTS sso_pending_sessions (
+                    token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES sso_users(id),
+                    expires_at REAL NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS sso_assignment_audit (
+                    user_id TEXT PRIMARY KEY REFERENCES sso_users(id),
+                    account_id TEXT NOT NULL REFERENCES accounts(account_id),
+                    company_id TEXT NOT NULL REFERENCES companies(company_id),
+                    assigned_by TEXT NOT NULL REFERENCES accounts(account_id), assigned_at REAL NOT NULL
                 );
             """)
 
@@ -223,3 +239,82 @@ class IdentityStore:
 
     def authenticate_service_token(self, token: str) -> Identity:
         return self._authenticate_token(token, "service_tokens")
+
+    def sso_user(self, issuer: str, sub: str, username: str) -> dict:
+        if not issuer or not sub or len(sub) > 255 or len(username) > 128:
+            raise ValueError("SSO 身份无效")
+        with self._db() as db:
+            db.execute("BEGIN IMMEDIATE")
+            db.execute("INSERT INTO sso_users (id,issuer,subject,preferred_username,created_at) VALUES (?,?,?,?,?) "
+                       "ON CONFLICT(issuer,subject) DO UPDATE SET preferred_username=excluded.preferred_username",
+                       (uuid.uuid4().hex, issuer, sub, username, time.time()))
+            return dict(db.execute("SELECT * FROM sso_users WHERE issuer=? AND subject=?", (issuer, sub)).fetchone())
+
+    def sso_actor(self, user_id: str) -> Identity | None:
+        with self._db() as db:
+            user = db.execute("SELECT account_id FROM sso_users WHERE id=?", (user_id,)).fetchone()
+            if not user:
+                raise KeyError(user_id)
+            return self._identity(db, user["account_id"]) if user["account_id"] else None
+
+    def list_sso_users(self, actor: Identity) -> list[dict]:
+        authorize(actor, "platform", "provision")
+        with self._db() as db:
+            return [dict(row) for row in db.execute(
+                "SELECT u.*,a.company_id FROM sso_users u LEFT JOIN accounts a ON a.account_id=u.account_id "
+                "ORDER BY u.created_at,u.id")]
+
+    def assign_sso_user(self, user_id: str, company_id: str, actor: Identity) -> Identity:
+        authorize(actor, "platform", "provision")
+        with self._db() as db:
+            db.execute("BEGIN IMMEDIATE")
+            company = db.execute("SELECT status FROM companies WHERE company_id=?", (company_id,)).fetchone()
+            if not company or company["status"] != "READY":
+                raise ValueError("仅可分配到已就绪企业")
+            user = db.execute("SELECT account_id FROM sso_users WHERE id=?", (user_id,)).fetchone()
+            if not user:
+                raise KeyError(user_id)
+            if user["account_id"]:
+                identity = self._identity(db, user["account_id"])
+                if identity.scope_id != company_id:
+                    raise VersionConflict("该用户已经分配企业")
+                return identity
+            account_id = uuid.uuid4().hex
+            db.execute("INSERT INTO accounts (account_id,username,password_hash,role,company_id) VALUES (?,?,?,?,?)",
+                       (account_id, "sso_" + account_id, "!sso-only", "company_admin", company_id))
+            db.execute("UPDATE sso_users SET account_id=? WHERE id=?", (account_id, user_id))
+            db.execute("INSERT INTO sso_assignment_audit VALUES (?,?,?,?,?)",
+                       (user_id, account_id, company_id, actor.account_id, time.time()))
+            return self._identity(db, account_id)
+
+    def issue_pending_session(self, user_id: str) -> str:
+        token = secrets.token_urlsafe(32)
+        with self._db() as db:
+            db.execute("DELETE FROM sso_pending_sessions WHERE expires_at<=?", (time.time(),))
+            db.execute("INSERT INTO sso_pending_sessions VALUES (?,?,?)", (_token_hash(token), user_id, time.time() + 3600))
+        return token
+
+    def pending_user(self, token: str) -> dict:
+        with self._db() as db:
+            row = db.execute("SELECT u.* FROM sso_pending_sessions p JOIN sso_users u ON u.id=p.user_id "
+                             "WHERE p.token_hash=? AND p.expires_at>?", (_token_hash(token), time.time())).fetchone()
+            if not row:
+                raise PermissionError("待分配会话已失效")
+            return dict(row)
+
+    def activate_pending(self, token: str) -> Identity:
+        with self._db() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT u.account_id FROM sso_pending_sessions p JOIN sso_users u ON u.id=p.user_id "
+                             "WHERE p.token_hash=? AND p.expires_at>?", (_token_hash(token), time.time())).fetchone()
+            if not row:
+                raise PermissionError("待分配会话已失效")
+            if not row["account_id"]:
+                raise VersionConflict("尚未分配企业，请等待超级管理员处理")
+            actor = self._identity(db, row["account_id"])
+            db.execute("DELETE FROM sso_pending_sessions WHERE token_hash=?", (_token_hash(token),))
+            return actor
+
+    def revoke_pending_session(self, token: str) -> None:
+        with self._db() as db:
+            db.execute("DELETE FROM sso_pending_sessions WHERE token_hash=?", (_token_hash(token),))
