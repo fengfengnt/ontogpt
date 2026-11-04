@@ -11,7 +11,14 @@
 - 现有本地账号、密码验证、平台/企业隔离和禁止平台注入本地企业账号的规则保留。
 - 只新增 SQLite 表，不重建既有表；本轮只操作测试临时库，没有迁移真实运行库。
 
-实现位于本聊天附加的隔离工作区 `C:/Users/70367/.codex/worktrees/ontology-sso/ontogpt`。原 `D:/Code/ontogpt` 中的两处 Web 演示修改及未跟踪文件保留，未推送远程、未合回原主目录、未启动或重建现有服务。
+首次交付位于本聊天附加的隔离工作区 `C:/Users/70367/.codex/worktrees/ontology-sso/ontogpt`。同日用户要求继续下一步后，已将 `codex/ontology-sso` 快进合并到 `D:/Code/ontogpt` 的 `main`，集成代码为 `cd991f1c`。主目录原有两处 Web 演示修改的 SHA256 和 107 个未跟踪文件的列表均核对保持；未推送远程、未启动或重建现有服务。
+
+## 主目录集成复核
+
+- 在 `D:/Code/ontogpt` 主目录重新执行完整服务测试：**102 passed，47 skipped**；前端 **18 passed**，TypeScript/Vite 构建通过，结果与隔离分支一致。
+- 私有运行配置保留所有原字节和已有配置值，仅追加非秘密项 `PROCUREMENT_SSO_ISSUER=https://sso.lvh.me:8443`、`PROCUREMENT_SSO_REDIRECT_URI=https://ontology.lvh.me/v1/auth/sso/callback`，未写入 client ID 或密钥。
+- 再次严格 TLS 核对认证源 Discovery，返回 issuer 与上述配置一致。现有运行配置仍缺 client ID、client secret，因此 SSO 保持未启用，密码登录能力保留。
+- 本轮检查未发现 8002 应用监听；接口及路径的测试证明不等于浏览器可访问或完成实际部署。
 
 ## 自动验证
 
