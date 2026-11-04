@@ -14,6 +14,7 @@ dependencies = [
     "uvicorn>=0.54.0,<0.55",
     "mcp>=2.3.0,<3",
     "httpx>=0.28.1",
+    "pyjwt[crypto]>=2.10,<3",
     "langgraph>=1.2.16,<2",
     "filelock>=3.32.7",
 ]
