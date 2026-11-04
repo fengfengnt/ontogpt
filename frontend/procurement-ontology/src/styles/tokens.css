@@ -80,6 +80,7 @@ nav button[aria-current=page] { background: var(--accent-soft); color: var(--acc
 .tree button[aria-pressed=true] { border-color: var(--accent); background: var(--accent-soft); }
 .source-text { min-height: 250px; }
 .login { max-width: 440px; margin: 12vh auto; padding: 40px; }
+.login a.primary { display: inline-block; padding: 8px 14px; border-radius: 6px; background: var(--accent); color: var(--on-accent); text-decoration: none; }
 details { margin-top: 12px; }
 summary { cursor: pointer; color: var(--text-muted); }
 hr { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }

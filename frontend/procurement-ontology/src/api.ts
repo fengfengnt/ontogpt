@@ -15,6 +15,8 @@ export async function api(path: string, options?: { method?: string; body?: unkn
 
 export const message = (error: unknown) => error instanceof Error ? error.message : '操作失败';
 export type Identity = { account_id: string; scope_id: string; role: string };
+export type PendingIdentity = { status: 'PENDING_ASSIGNMENT'; account_id: null; scope_id: null; role: null; preferred_username: string };
+export type Session = Identity | PendingIdentity;
 export type Versions = { tree: string; ontology: string };
 export type Span = { revision_id: string; start: number; end: number; quote: string };
 export type Source = { id: string; text: string; simulated: boolean; sha256: string };

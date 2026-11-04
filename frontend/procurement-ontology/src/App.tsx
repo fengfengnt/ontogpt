@@ -1,36 +1,28 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { api, message, type Batch, type Identity } from './api';
+import { api, message, type Batch, type Session } from './api';
 import TreeEditor from './TreeEditor';
 import PlatformEditor from './PlatformEditor';
 import AgentPage from './AgentPage';
 import { PublishPage, ReviewPage, SchemaPage, SourcesPage } from './ManagementPages';
+import { LoginPage, PendingPage, SSOAssignments } from './LoginPages';
 
 const OntologyCanvas = lazy(() => import('./OntologyCanvas'));
 
 export default function App() {
-  const [identity, setIdentity] = useState<Identity | null>();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [identity, setIdentity] = useState<Session | null>();
   const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState('');
   const [batchId, setBatchId] = useState<string>();
   const [pending, setPending] = useState<Batch>();
   const [refresh, setRefresh] = useState(0);
   useEffect(() => { api('/v1/me').then(setIdentity).catch(() => setIdentity(null)); }, []);
   if (identity === undefined) return <p className="empty" role="status">加载工作区…</p>;
-  if (!identity) return <form className="panel login" onSubmit={async event => { event.preventDefault(); setBusy(true); setError(''); try {
-    setIdentity(await api('/v1/session', { method: 'POST', body: { username, password } })); setPassword(''); setTab('');
-  } catch (e) { setError(message(e)); } finally { setBusy(false); } }}>
-    <span className="eyebrow">采购知识工作台</span><h1>让知识有据可查</h1><p className="muted">登录企业或平台管理员账号</p>
-    <label>用户名<input required autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} /></label>
-    <label>密码<input required type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></label>
-    {error && <p role="alert" className="alert error">{error}</p>}<button className="primary" disabled={busy}>{busy ? '登录中…' : '进入工作区'}</button>
-  </form>;
+  if (!identity) return <LoginPage onLogin={actor => { setIdentity(actor); setTab(''); }} />;
+  if (identity.scope_id === null) return <PendingPage identity={identity} onLogin={setIdentity} onLogout={() => setIdentity(null)} />;
   const platform = identity.scope_id === 'platform';
   const reader = identity.role === 'reader';
   const prefix = platform ? '/v1/platform' : '/v1/manage';
-  const menus = platform ? [['generic', '通用本体'], ['tree', '通用三级树'], ['publish', '通用发布记录'], ['provision', '企业开通']]
+  const menus = platform ? [['generic', '通用本体'], ['tree', '通用三级树'], ['publish', '通用发布记录'], ['provision', '企业开通'], ['sso', 'SSO 用户分配']]
     : reader ? [['canvas', '本体画布'], ['tree', '三级分类树']] : [['sources', '资料与提取'], ['review', '候选审核'], ['canvas', '本体画布'], ['tree', '三级分类树'], ['schema', 'Schema 改进'], ['publish', '发布记录']];
   if (identity.scope_id === 'test_buyer1') menus.push(['agent', '本体问答测试']);
   const selected = tab || menus[0][0];
@@ -54,6 +46,7 @@ export default function App() {
         {selected === 'schema' && !platform && !reader && <SchemaPage company={identity.scope_id} />}
         {selected === 'publish' && !reader && <PublishPage prefix={prefix} onPublished={() => { setPending(undefined); setRefresh(value => value + 1); }} />}
         {selected === 'provision' && platform && <ProvisionPage />}
+        {selected === 'sso' && platform && <SSOAssignments />}
         {selected === 'agent' && identity.scope_id === 'test_buyer1' && <AgentPage />}
       </div>
     </div></main></div>;
