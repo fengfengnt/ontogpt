@@ -28,12 +28,14 @@ SSO 使用后端 OIDC 授权码流程，client secret 只保存在后端私有�
 
 | 配置键 | 内容 |
 | --- | --- |
-| `PROCUREMENT_SSO_ISSUER` | 认证源当前固定 HTTPS issuer；本地本轮核对值为 `https://sso.lvh.me:8443`，切换 443 后须重新核对，不能由请求域名推测 |
+| `PROCUREMENT_SSO_ISSUER` | 固定 HTTPS issuer；2026-11-04 本地规范值已切换为 `https://sso.lvh.me`，不得使用旧 8443 回退；实际验证状态见下方记录 |
 | `PROCUREMENT_SSO_CLIENT_ID` | SSO 管理后台登记的 confidential client ID |
 | `PROCUREMENT_SSO_CLIENT_SECRET` | 该 client 的密钥，仅写入私有配置，不提交 Git、不发到聊天中 |
 | `PROCUREMENT_SSO_REDIRECT_URI` | SSO 后台精确登记的 HTTPS 回调，路径固定 `/v1/auth/sso/callback` |
 
 本地 HTTPS 规划为 `https://ontology.lvh.me/`，对应回调 `https://ontology.lvh.me/v1/auth/sso/callback`、密码入口 `https://ontology.lvh.me/login/password`。这些地址依赖另行部署的工作台和共用代理，本功能的代码完成不表示部署完成。SSO 发起和回调必须来自配置的 HTTPS origin。认证源为该 client 启用 `authorization_code`、`client_secret_basic`、`openid profile` 和 S256 PKCE。
+
+本地 issuer 已按中心通知迁至 `https://sso.lvh.me`，OntoGPT 的 callback 和自身 Origin 保持不变；用户已取消旧 8443 兼容。当前部署镜像尚不含 SSO 模块，正式发布该模块还需为应用容器配置 `sso.lvh.me:host-gateway` 及本地公共 CA 信任，保留原有系统 CA。准备、身份连续性核对及实际验证见 [443 切换记录](../../docs/procurement-ontology/sso-issuer-443-2026-11-04.md)。
 
 HTTP 客户端使用 Python 系统默认 TLS 信任并校验证书，禁止关闭验证。自签本地 CA 需在实际运行宿主/容器中受信；也可通过 Python 支持的 `SSL_CERT_FILE` 指定可信公共 CA bundle，不能把私钥或应用密钥写入该文件。共用 Nginx/网关及日志采集必须屏蔽认证回调的 query，不能记录 code、state、Cookie、Authorization 或凭据正文；本服务启动命令默认 `log_level=warning`，不要为认证路径开启请求内容日志。
 

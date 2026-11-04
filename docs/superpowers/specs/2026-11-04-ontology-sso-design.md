@@ -21,7 +21,7 @@
 - `create_account` 禁止平台管理员向已就绪企业注入本地账号。保留该限制，为待分配 SSO 身份增加单独的、可审计的分配操作。
 - 后端已有随机会话、摘要存储、角色校验和同源写请求保护。前端从 `/v1/me` 获取身份。
 - `httpx` 已是直接依赖；锁文件已有 `PyJWT[crypto]`，签名验证复用该库并将其声明为直接依赖，不自己实现 JWT 密码算法。
-- 本轮严格 TLS Discovery 已确认当前 issuer 为 `https://sso.lvh.me:8443`，统一 443 的迁移不自动改变 issuer。本功能使用明确配置值，部署时重新核对。
+- 初次严格 TLS Discovery 的历史 issuer 为 `https://sso.lvh.me:8443`。同日中心已按用户指令切至 `https://sso.lvh.me`，且不再兼容旧 8443；现行配置及验证以 [443 切换记录](../../procurement-ontology/sso-issuer-443-2026-11-04.md) 为准，部署时重新核对。
 - 认证源 UserInfo 当前仅提供 `sub,preferred_username,tenant_id`。`tenant_id`、client 的 `ownerTenantId` 均不决定本体企业空间。
 - 当前 HTTPS 部署另有设计，本功能不替换共用 Nginx 或启动、迁移其他服务。SSO 真实接入依赖本工作台 HTTPS 与 CA 信任就绪。
 
