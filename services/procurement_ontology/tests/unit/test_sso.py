@@ -4,7 +4,8 @@ import base64
 import hashlib
 import json
 import time
-from urllib.parse import parse_qs, urlparse
+from dataclasses import replace
+from urllib.parse import parse_qs, unquote_plus, urlparse
 
 import httpx
 import jwt
@@ -20,7 +21,8 @@ def oidc(tmp_path):
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     jwk = json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(key.public_key()))
     jwk.update(kid="test-key", alg="RS256", use="sig")
-    data = {"claims": {}, "userinfo": {}, "metadata": {}, "bad_signature": False, "network_error": False}
+    data = {"claims": {}, "userinfo": {}, "metadata": {}, "bad_signature": False, "network_error": False,
+            "secret": "synthetic-secret"}
     issuer = "https://sso.example"
     def remote(request):
         if data["network_error"]:
@@ -31,7 +33,9 @@ def oidc(tmp_path):
                 "jwks_uri": issuer + "/jwks", "id_token_signing_alg_values_supported": ["RS256"], **data["metadata"]})
         if request.url.path == "/token":
             form = parse_qs(request.content.decode())
-            assert request.headers["Authorization"] == "Basic " + base64.b64encode(b"client:synthetic-secret").decode()
+            basic = base64.b64decode(request.headers["Authorization"][6:]).decode().split(":", 1)
+            if [unquote_plus(value) for value in basic] != ["client", data["secret"]]:
+                return httpx.Response(401, json={"error": "invalid_client"})
             assert form["grant_type"] == ["authorization_code"]
             assert form["code"] == ["valid-code"]
             assert form["redirect_uri"] == ["https://ontology.example/v1/auth/sso/callback"]
@@ -133,6 +137,7 @@ def test_expired_transaction_fails(oidc):
 @pytest.mark.parametrize("metadata", [
     {"issuer": "https://other.example"}, {"token_endpoint": "https://other.example/token"},
     {"jwks_uri": "http://sso.example/jwks"}, {"userinfo_endpoint": "https://user:pass@sso.example/info"},
+    {"authorization_endpoint": 123},
 ])
 def test_untrusted_metadata_is_rejected(oidc, metadata):
     from procurement_ontology.sso import SSOError
@@ -149,3 +154,11 @@ def test_missing_or_partial_configuration_leaves_password_mode_available(monkeyp
     assert SSOConfig.from_env() is None
     monkeypatch.setenv("PROCUREMENT_SSO_CLIENT_ID", "client")
     assert SSOConfig.from_env() is None
+
+
+def test_client_secret_basic_encodes_reserved_characters(oidc):
+    client, _, data = oidc
+    data["secret"] = "special+secret:/with spaces%25"
+    client.config = replace(client.config, client_secret=data["secret"])
+    state, binding = begin(oidc)
+    assert client.finish(state, binding, "valid-code")["sub"] == "member:1:7"

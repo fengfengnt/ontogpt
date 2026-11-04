@@ -7,7 +7,7 @@ import secrets
 import ssl
 import time
 from dataclasses import dataclass, field
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import quote_plus, urlencode, urlsplit
 
 import httpx
 import jwt
@@ -49,6 +49,8 @@ class SSOClient:
 
     @staticmethod
     def _https(url):
+        if not isinstance(url, str):
+            raise ValueError("协议地址必须是字符串")
         parsed = urlsplit(url)
         if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.fragment:
             raise ValueError("需要固定 HTTPS 地址")
@@ -107,7 +109,8 @@ class SSOClient:
                     raise ValueError("登录事务无效")
                 db.execute("DELETE FROM sso_transactions WHERE state_hash=?", (_token_hash(state),))
             metadata = self._metadata()
-            tokens = self._json(metadata["token_endpoint"], auth=(self.config.client_id, self.config.client_secret),
+            tokens = self._json(metadata["token_endpoint"],
+                                auth=(quote_plus(self.config.client_id, safe=""), quote_plus(self.config.client_secret, safe="")),
                                 data={"grant_type": "authorization_code", "code": code,
                                       "redirect_uri": self.config.redirect_uri, "code_verifier": transaction["verifier"]})
             if str(tokens.get("token_type", "")).lower() != "bearer":

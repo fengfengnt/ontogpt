@@ -20,6 +20,29 @@ uv run --project services/procurement_ontology procurement-service serve --port 
 
 默认运行目录为 `services/procurement_ontology/runtime/`，已经排除 Git。`PROCUREMENT_RUNTIME_DIR` 可以指定另一个本机目录。服务仅监听本机，使用一个进程；同一个数据集前缀只允许配给一个运行目录和服务实例。
 
+## SSO 与密码登录
+
+默认首页提供 SSO 登录；所有已有本地账号，包括平台管理员、企业管理员和只读用户，都可以直接通过 `/login/password` 使用用户名和密码登录。按上面的本机启动方式，密码入口为 `http://127.0.0.1:8002/login/password`。SSO 未配置时仍保留该入口。
+
+SSO 使用后端 OIDC 授权码流程，client secret 只保存在后端私有运行环境或运行目录 `.env` 中。配置完整后重启本服务生效：
+
+| 配置键 | 内容 |
+| --- | --- |
+| `PROCUREMENT_SSO_ISSUER` | 认证源当前固定 HTTPS issuer；本地本轮核对值为 `https://sso.lvh.me:8443`，切换 443 后须重新核对，不能由请求域名推测 |
+| `PROCUREMENT_SSO_CLIENT_ID` | SSO 管理后台登记的 confidential client ID |
+| `PROCUREMENT_SSO_CLIENT_SECRET` | 该 client 的密钥，仅写入私有配置，不提交 Git、不发到聊天中 |
+| `PROCUREMENT_SSO_REDIRECT_URI` | SSO 后台精确登记的 HTTPS 回调，路径固定 `/v1/auth/sso/callback` |
+
+本地 HTTPS 规划为 `https://ontology.lvh.me/`，对应回调 `https://ontology.lvh.me/v1/auth/sso/callback`、密码入口 `https://ontology.lvh.me/login/password`。这些地址依赖另行部署的工作台和共用代理，本功能的代码完成不表示部署完成。SSO 发起和回调必须来自配置的 HTTPS origin。认证源为该 client 启用 `authorization_code`、`client_secret_basic`、`openid profile` 和 S256 PKCE。
+
+HTTP 客户端使用 Python 系统默认 TLS 信任并校验证书，禁止关闭验证。自签本地 CA 需在实际运行宿主/容器中受信；也可通过 Python 支持的 `SSL_CERT_FILE` 指定可信公共 CA bundle，不能把私钥或应用密钥写入该文件。共用 Nginx/网关及日志采集必须屏蔽认证回调的 query，不能记录 code、state、Cookie、Authorization 或凭据正文；本服务启动命令默认 `log_level=warning`，不要为认证路径开启请求内容日志。
+
+用户首次 SSO 登录仅建立待分配身份，不读写任何企业数据。平台管理员从密码入口登录，在“SSO 用户分配”中选择已就绪企业，用户随后点击“刷新分配状态”即可成为该企业的企业管理员。不会按同名、手机号或来源 `tenant_id` 关联既有账号，SSO 用户不会获得自动生成的本地密码。分配写入 SQLite 审计，重复分配同一企业不创建重复账号；首期不提供转企业或账号合并。
+
+“退出登录”只退出本工作台，中心会话可能仍有效，之后 SSO 登录可能无需重新输入验证码。工作台会话有效期沿用一小时；中心退出或停用不即时撤销已签发的工作台会话。本地账号有效性和企业就绪状态仍在每次鉴权时核验。
+
+协议测试使用模拟认证源和真实 RSA 验签；真实 client 凭据、浏览器跨站 Cookie 和 HTTPS 部署仍需单独联调。[设计与边界](../../docs/superpowers/specs/2026-11-04-ontology-sso-design.md)、[实施计划](../../docs/superpowers/plans/2026-11-04-ontology-sso.md)。
+
 ## 模型配置
 
 在启动服务的进程环境中配置，或写入运行目录自己的 `.env`；也可以通过 `PROCUREMENT_ENV_FILE` 指定现有配置文件。不要将密钥提交 Git 或发到聊天中。

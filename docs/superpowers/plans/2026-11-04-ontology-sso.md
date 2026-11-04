@@ -32,10 +32,10 @@
 
 **Interfaces:** IdentityStore 提供 `sso_user(issuer, sub, username)`、`list_sso_users(actor)`、`assign_sso_user(user_id, company_id, actor)`、`issue_pending_session(user_id)`、`pending_user(token)`、`activate_pending(token)`、`revoke_pending_session(token)`；正常返回现有 `Identity`，待分配返回资料而非 Identity。
 
-- [ ] 写真实 SQLite 测试：身份唯一、不自动合并、平台分配到 READY 企业、幂等/冲突、越权拒绝、待分配无业务权限及激活后撤销旧 Cookie。
-- [ ] 运行新测试确认缺失行为导致失败。
-- [ ] 实现增量表与事务，保留原账号约束和密码认证限制；分配记录随管理库备份。
-- [ ] 运行 `pytest tests/unit/test_identity.py tests/unit/test_sso_identity.py -q`，预期全通过；提交。
+- [x] 写真实 SQLite 测试：身份唯一、不自动合并、平台分配到 READY 企业、幂等/冲突、越权拒绝、待分配无业务权限及激活后撤销旧 Cookie。
+- [x] 运行新测试确认缺失行为导致失败。
+- [x] 实现增量表与事务，保留原账号约束和密码认证限制；分配记录随管理库备份。
+- [x] 运行 `pytest tests/unit/test_identity.py tests/unit/test_sso_identity.py -q`，预期全通过；提交。
 
 ### Task 2: 后端 OIDC 协议
 
@@ -43,10 +43,10 @@
 
 **Interfaces:** `SSOConfig.from_env()` 返回完整配置或 None；`SSOClient.start()` 生成服务端事务和浏览器绑定；`SSOClient.finish(state, binding, code)` 返回经过验证的 issuer/sub/username。消费事务与浏览器绑定由该模块负责，身份分配留给 Task 1。
 
-- [ ] 使用真实 RSA 签名和 httpx MockTransport 写协议测试，固定请求参数、Basic 认证、UserInfo 对齐以及签名/nonce/issuer/audience、重放/过期、错误元数据失败拒绝。
-- [ ] 运行新测试确认失败。
-- [ ] 用 httpx 与 PyJWT 实现 HTTPS Discovery/JWKS、授权码和 S256，事务 5 分钟、一次消费；禁止端点任意跳转和泄漏凭据。
-- [ ] 运行 `pytest tests/unit/test_sso.py -q`，预期全通过；提交。
+- [x] 使用真实 RSA 签名和 httpx MockTransport 写协议测试，固定请求参数、Basic 认证、UserInfo 对齐以及签名/nonce/issuer/audience、重放/过期、错误元数据失败拒绝。
+- [x] 运行新测试确认失败。
+- [x] 用 httpx 与 PyJWT 实现 HTTPS Discovery/JWKS、授权码和 S256，事务 5 分钟、一次消费；禁止端点任意跳转和泄漏凭据。
+- [x] 运行 `pytest tests/unit/test_sso.py -q`，预期全通过；提交。
 
 ### Task 3: HTTP 登录、分配和会话闭环
 
@@ -54,10 +54,10 @@
 
 **Interfaces:** 实现设计中的 `/v1/auth/sso/*`、待分配 `/v1/me`、`POST /v1/session/activate`、待分配退出和平台用户/企业列表及分配接口；`create_app(..., sso_config=None)` 支持明确注入配置，runtime 从私有环境加载。
 
-- [ ] 先写 HTTP 测试：SSO 未配置不影响密码、待分配不能读写业务/平台/MCP、平台分配与用户激活、错误 Origin/CSRF、路径刷新。
-- [ ] 运行新测试确认失败。
-- [ ] 注册固定路由并处理安全 Cookie、no-store、安全协议错误；保留现有鉴权与 MCP 路径；密码登录清除待分配状态，退出撤销当前两种会话。
-- [ ] 运行 `pytest tests/unit -q`，预期无失败；提交。
+- [x] 先写 HTTP 测试：SSO 未配置不影响密码、待分配不能读写业务/平台/MCP、平台分配与用户激活、错误 Origin/CSRF、路径刷新。
+- [x] 运行新测试确认失败。
+- [x] 注册固定路由并处理安全 Cookie、no-store、安全协议错误；保留现有鉴权与 MCP 路径；密码登录清除待分配状态，退出撤销当前两种会话。
+- [x] 运行 `pytest tests/unit -q`，预期无失败；提交。
 
 ### Task 4: 登录与分配界面
 
@@ -65,9 +65,9 @@
 
 **Interfaces:** `/v1/me` 的待分配响应由前端单独处理；平台新增 SSO 分配菜单，使用 Task 3 固定 API；密码登录链接固定 `/login/password`。
 
-- [ ] 写前端测试，覆盖密码路径、默认 SSO、未配置、待分配刷新、管理员选择企业/提交和错误态；先运行确认失败。
-- [ ] 实现最小组件和路径切换，分配角色固定，不新增 router 依赖。
-- [ ] 运行 `npm test -- --run` 和 `npm run build`，预期通过；提交。
+- [x] 写前端测试，覆盖密码路径、默认 SSO、未配置、待分配刷新、管理员选择企业/提交和错误态；先运行确认失败。
+- [x] 实现最小组件和路径切换，分配角色固定，不新增 router 依赖。
+- [x] 运行 `npm test -- --run` 和 `npm run build`，预期通过；提交。
 
 ### Task 5: 回归、独立审查与交付
 
@@ -75,7 +75,11 @@
 
 **Interfaces:** 文档列出四个配置键、精确 callback、密码 URL，以及没有凭据时的限制。
 
-- [ ] 运行采购服务测试、前端全测试/构建、`git diff --check`；对实际外部依赖测试区分可运行与缺少环境的情况。
-- [ ] 按 requesting-code-review 技能派独立审阅者检查完整变更，处理真实安全或行为问题并补回归测试。
-- [ ] 用服务端页面测试确认密码 URL 可直接刷新；不冒充真实 SSO 浏览器验收，不启动或重建共用服务。
-- [ ] 更新任务与验收结果并提交，保留可审阅隔离工作区；不推送远端。
+- [x] 运行采购服务测试、前端全测试/构建、`git diff --check`；对实际外部依赖测试区分可运行与缺少环境的情况。
+- [x] 按 requesting-code-review 技能派独立审阅者检查完整变更，处理真实安全或行为问题并补回归测试。
+- [x] 用服务端页面测试确认密码 URL 可直接刷新；不冒充真实 SSO 浏览器验收，不启动或重建共用服务。
+- [x] 更新任务与验收结果并提交，保留可审阅隔离工作区；不推送远端。
+
+## 执行结果
+
+2026-11-04：全部任务完成。完整服务测试 102 passed、47 skipped；前端 18 passed，生产构建通过。独立审查的特殊字符 Basic 编码和异常 Discovery 两项已按 RED→GREEN 修复。真实凭据/浏览器/部署仍待联调，详见 [验证记录](../../procurement-ontology/sso-validation-2026-11-04.md)。
