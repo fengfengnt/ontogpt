@@ -4,6 +4,8 @@
 
 设计与评审入口：[文档索引](../../docs/procurement-ontology/README.md)。实施记录：[当前计划](../../docs/superpowers/plans/2026-10-19-procurement-ontology-mvp.md)。
 
+当前本机活动部署已迁入 WSL Docker，访问 `https://ontology.lvh.me/`。启停、数据位置与验证结果见 [2026-11-04 部署记录](../../docs/procurement-ontology/deployment-2026-11-04.md)。原 Windows runtime 是回退副本，不要再用同一数据集前缀并行启动下述开发服务。
+
 ## 本机启动
 
 在工程根目录使用 Windows PowerShell；需要 Python、uv、Node.js，以及已启动的 WSL Fuseki。Fuseki 部署步骤见 [部署说明](../../deploy/fuseki/README.md)，本项目端口为 `127.0.0.1:3032`。
