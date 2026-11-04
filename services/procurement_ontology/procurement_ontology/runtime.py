@@ -1,6 +1,7 @@
 """Local single-process service commands; credentials stay outside Git."""
 
 import os
+from ipaddress import ip_network
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -77,7 +78,8 @@ def build_app(runtime=None):
     bootstrap_platform(store)
     return create_app(identities, store, catalog,
                       draft_parent=os.getenv("PROCUREMENT_DRAFT_PARENT", str(ROOT.parent / "procurement-schema-drafts")),
-                      frontend_dist=ROOT / "frontend/procurement-ontology/dist")
+                      frontend_dist=ROOT / "frontend/procurement-ontology/dist",
+                      public_origin=os.getenv("PROCUREMENT_PUBLIC_ORIGIN"))
 
 
 @main.command("serve")
@@ -88,7 +90,13 @@ def serve(port):
 
     runtime = runtime_directory()
     with runtime_lock(runtime):
-        uvicorn.run(build_app(runtime), host="127.0.0.1", port=port, log_level="warning", workers=1)
+        app = build_app(runtime)
+        proxies = os.getenv("PROCUREMENT_TRUSTED_PROXIES", "127.0.0.1").split(",")
+        if any(ip_network(peer.strip()).num_addresses != 1 for peer in proxies):
+            raise ValueError("Trusted proxies must be individual IP addresses")
+        uvicorn.run(app, host=os.getenv("PROCUREMENT_BIND_HOST", "127.0.0.1"), port=port,
+                    log_level="warning", workers=1, proxy_headers=True,
+                    forwarded_allow_ips=[str(ip_network(peer.strip()).network_address) for peer in proxies])
 
 
 @main.command("backup")

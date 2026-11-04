@@ -6,11 +6,13 @@ from contextlib import asynccontextmanager, nullcontext
 from dataclasses import asdict
 from pathlib import Path
 from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import Field
 
@@ -81,7 +83,13 @@ class QuestionInput(DomainModel):
 
 
 def create_app(identities, store, catalog, *, draft_parent, client_factory=configured_client,
-               frontend_dist: Path | None = None):
+               frontend_dist: Path | None = None, public_origin: str | None = None):
+    origin = urlsplit(public_origin) if public_origin else None
+    if origin and (origin.scheme not in {"http", "https"} or not origin.hostname
+                   or origin.username or origin.password or "*" in origin.netloc
+                   or origin.path or origin.query or origin.fragment):
+        raise ValueError("PROCUREMENT_PUBLIC_ORIGIN must be an exact HTTP(S) origin")
+    secure_cookie = bool(origin and origin.scheme == "https")
     gate = store.gate
     identities.gate = catalog.gate = gate
     query = KnowledgeQuery(store)
@@ -92,8 +100,8 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
     mcp = create_mcp(query)
     mcp_app = mcp.streamable_http_app(streamable_http_path="/", stateless_http=True, json_response=True,
                                     transport_security=TransportSecuritySettings(
-                                        allowed_hosts=["127.0.0.1:*", "localhost:*"],
-                                        allowed_origins=["http://127.0.0.1:*", "http://localhost:*"]))
+                                        allowed_hosts=[origin.netloc] if origin else ["127.0.0.1:*", "localhost:*"],
+                                        allowed_origins=[public_origin] if origin else ["http://127.0.0.1:*", "http://localhost:*"]))
     provision_lock = threading.Lock()
 
     @asynccontextmanager
@@ -104,6 +112,8 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
             yield
 
     app = FastAPI(title="采购本体知识服务", lifespan=lifespan)
+    if origin:
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=[origin.hostname, "127.0.0.1", "localhost"])
     app.state.query, app.state.governance, app.state.extraction, app.state.mcp = query, governance, extraction, mcp
     app.state.identities, app.state.catalog, app.state.store = identities, catalog, store
     app.state.gate = gate
@@ -194,7 +204,8 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
             actor = identities.authenticate(Credentials(data.username, data.password))
         except PermissionError:
             raise HTTPException(401, detail="认证失败") from None
-        response.set_cookie(COOKIE, identities.issue_session(actor), httponly=True, samesite="strict", max_age=3600)
+        response.set_cookie(COOKIE, identities.issue_session(actor), secure=secure_cookie,
+                            httponly=True, samesite="strict", max_age=3600)
         return asdict(actor)
 
     @app.get("/v1/me")
@@ -206,7 +217,7 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
         token = request.headers.get("Authorization", "")[7:] or request.cookies.get(COOKIE)
         if token:
             identities.revoke_session(token)
-        response.delete_cookie(COOKIE)
+        response.delete_cookie(COOKIE, secure=secure_cookie, httponly=True, samesite="strict")
         return {"status": "logged_out"}
 
     @app.post("/v1/platform/companies")
