@@ -9,7 +9,7 @@ from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import Field
@@ -26,8 +26,11 @@ from .models import DomainModel, SourceSpan
 from .query import KnowledgeQuery, version_pair
 from .schema_draft import SchemaDraftService
 from .store import VersionConflict
+from .sso import SSOClient, SSOError
 
 COOKIE = "procurement_session"
+PENDING_COOKIE = "procurement_pending"
+OIDC_COOKIE = "procurement_oidc"
 
 
 class Login(DomainModel):
@@ -36,6 +39,10 @@ class Login(DomainModel):
 
 
 class NewCompany(Login):
+    company_id: str
+
+
+class Assignment(DomainModel):
     company_id: str
 
 
@@ -81,7 +88,7 @@ class QuestionInput(DomainModel):
 
 
 def create_app(identities, store, catalog, *, draft_parent, client_factory=configured_client,
-               frontend_dist: Path | None = None):
+               frontend_dist: Path | None = None, sso_config=None):
     gate = store.gate
     identities.gate = catalog.gate = gate
     query = KnowledgeQuery(store)
@@ -101,12 +108,17 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
         for company in identities.ready_company_ids():
             extraction.recover_interrupted(company)
         async with mcp.session_manager.run():
-            yield
+            try:
+                yield
+            finally:
+                if app.state.sso:
+                    app.state.sso.close()
 
     app = FastAPI(title="采购本体知识服务", lifespan=lifespan)
     app.state.query, app.state.governance, app.state.extraction, app.state.mcp = query, governance, extraction, mcp
     app.state.identities, app.state.catalog, app.state.store = identities, catalog, store
     app.state.gate = gate
+    app.state.sso = SSOClient(sso_config, identities) if sso_config else None
 
     def error(status, code, message):
         return JSONResponse(status_code=status, content={"code": code, "message": message, "request_id": uuid.uuid4().hex})
@@ -129,13 +141,14 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
             origin = request.headers.get("Origin")
             if origin and origin.rstrip("/") != str(request.base_url).rstrip("/"):
                 return error(403, "ORIGIN_REJECTED", "只接受同源管理请求")
-            if request.cookies.get(COOKIE) and not request.headers.get("Authorization") and request.headers.get("X-Requested-With") != "procurement-ontology":
+            if (request.cookies.get(COOKIE) or request.cookies.get(PENDING_COOKIE)) and not request.headers.get("Authorization") and request.headers.get("X-Requested-With") != "procurement-ontology":
                 return error(403, "CSRF_REJECTED", "管理请求缺少同源标记")
         try:
             with gate.writer() if request.method not in {"GET", "HEAD", "OPTIONS"} and not request.url.path.startswith("/mcp") else nullcontext():
                 response = await call_next(request)
             if request.url.path.startswith(("/v1", "/mcp")):
                 response.headers["Cache-Control"] = "no-store"
+                response.headers["Referrer-Policy"] = "no-referrer"
             return response
         except MaintenanceError:
             return error(503, "MAINTENANCE", "服务处于维护窗口，暂不接受新写入")
@@ -176,6 +189,20 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
 
     Actor = Annotated[Identity, Depends(identity)]
 
+    def session_cookie(response, request, token, name=COOKIE):
+        response.set_cookie(name, token, httponly=True, secure=request.url.scheme == "https",
+                            samesite="strict", max_age=3600)
+
+    def clear_sessions(request, response):
+        token = request.cookies.get(COOKIE)
+        if token:
+            identities.revoke_session(token)
+        pending = request.cookies.get(PENDING_COOKIE)
+        if pending:
+            identities.revoke_pending_session(pending)
+        for name in (COOKIE, PENDING_COOKIE):
+            response.delete_cookie(name, httponly=True, secure=request.url.scheme == "https", samesite="strict")
+
     def scoped(request: Request, actor: Actor):
         platform_path = request.url.path.startswith("/v1/platform/")
         if platform_path != (actor.scope_id == "platform"):
@@ -189,25 +216,103 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
         return {"status": "ok"}
 
     @app.post("/v1/session")
-    def login(data: Login, response: Response):
+    def login(data: Login, request: Request, response: Response):
         try:
             actor = identities.authenticate(Credentials(data.username, data.password))
         except PermissionError:
             raise HTTPException(401, detail="认证失败") from None
-        response.set_cookie(COOKIE, identities.issue_session(actor), httponly=True, samesite="strict", max_age=3600)
+        clear_sessions(request, response)
+        session_cookie(response, request, identities.issue_session(actor))
         return asdict(actor)
 
     @app.get("/v1/me")
-    def me(actor: Actor):
+    def me(request: Request):
+        if request.headers.get("Authorization") or request.cookies.get(COOKIE):
+            return asdict(identity(request))
+        try:
+            user = identities.pending_user(request.cookies.get(PENDING_COOKIE, ""))
+        except PermissionError:
+            raise HTTPException(401, detail="需要登录") from None
+        return {"status": "PENDING_ASSIGNMENT", "account_id": None, "scope_id": None, "role": None,
+                "preferred_username": user["preferred_username"]}
+
+    @app.post("/v1/session/activate")
+    def activate_session(request: Request, response: Response):
+        if request.cookies.get(COOKIE) or request.headers.get("Authorization"):
+            raise PermissionError("请先退出当前账号")
+        try:
+            actor = identities.activate_pending(request.cookies.get(PENDING_COOKIE, ""))
+        except VersionConflict:
+            return error(409, "PENDING_ASSIGNMENT", "尚未分配企业，请等待超级管理员处理")
+        response.delete_cookie(PENDING_COOKIE, httponly=True, secure=request.url.scheme == "https", samesite="strict")
+        session_cookie(response, request, identities.issue_session(actor))
         return asdict(actor)
 
     @app.delete("/v1/session")
-    def logout(request: Request, response: Response, actor: Actor):
-        token = request.headers.get("Authorization", "")[7:] or request.cookies.get(COOKIE)
-        if token:
-            identities.revoke_session(token)
-        response.delete_cookie(COOKIE)
+    def logout(request: Request, response: Response):
+        authorization = request.headers.get("Authorization", "")
+        if authorization.startswith("Bearer "):
+            identities.revoke_session(authorization[7:])
+        clear_sessions(request, response)
         return {"status": "logged_out"}
+
+    @app.get("/v1/auth/sso/config")
+    def sso_configured():
+        return {"enabled": app.state.sso is not None}
+
+    @app.get("/v1/auth/sso/start")
+    def sso_start(request: Request):
+        if app.state.sso is None:
+            return error(503, "SSO_UNAVAILABLE", "SSO 尚未配置")
+        if request.url.scheme != "https" or str(request.base_url).rstrip("/") != str(
+            app.state.sso.config.redirect_uri.rsplit("/v1/auth/sso/callback", 1)[0]
+        ):
+            return error(400, "SSO_ORIGIN_REJECTED", "请从已配置的 HTTPS 工作台地址登录")
+        try:
+            url, binding = app.state.sso.start()
+        except SSOError:
+            return error(503, "SSO_UNAVAILABLE", "SSO 登录暂不可用，请稍后重试")
+        response = RedirectResponse(url, status_code=303)
+        response.set_cookie(OIDC_COOKIE, binding, max_age=300, path="/v1/auth/sso", secure=True, httponly=True, samesite="lax")
+        return response
+
+    @app.get("/v1/auth/sso/callback")
+    def sso_callback(request: Request):
+        sso = app.state.sso
+        if sso is None:
+            return error(503, "SSO_UNAVAILABLE", "SSO 尚未配置")
+        params = request.query_params
+        if request.url.scheme != "https" or str(request.url).split("?", 1)[0] != sso.config.redirect_uri or any(
+            len(params.getlist(key)) != 1 for key in params
+        ) or "error" in params or ("iss" in params and params["iss"] != sso.config.issuer):
+            return error(400, "SSO_FAILED", "SSO 登录失败，请重新开始登录")
+        try:
+            verified = sso.finish(params.get("state", ""), request.cookies.get(OIDC_COOKIE, ""), params.get("code", ""))
+            user = identities.sso_user(verified["issuer"], verified["sub"], verified["username"])
+            actor = identities.sso_actor(user["id"])
+        except SSOError:
+            return error(400, "SSO_FAILED", "SSO 登录失败，请重新开始登录")
+        response = RedirectResponse("/", status_code=303)
+        clear_sessions(request, response)
+        response.delete_cookie(OIDC_COOKIE, path="/v1/auth/sso", secure=True, httponly=True, samesite="lax")
+        if actor:
+            session_cookie(response, request, identities.issue_session(actor))
+        else:
+            session_cookie(response, request, identities.issue_pending_session(user["id"]), PENDING_COOKIE)
+        return response
+
+    @app.get("/v1/platform/sso-users")
+    def sso_users(actor: Scoped):
+        return identities.list_sso_users(actor)
+
+    @app.get("/v1/platform/companies")
+    def companies(actor: Scoped):
+        authorize(actor, "platform", "provision")
+        return identities.ready_company_ids()
+
+    @app.post("/v1/platform/sso-users/{user_id}/assignment")
+    def assign_user(user_id: str, data: Assignment, actor: Scoped):
+        return asdict(identities.assign_sso_user(user_id, data.company_id, actor))
 
     @app.post("/v1/platform/companies")
     def provision(data: NewCompany, actor: Scoped):
@@ -354,5 +459,9 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
 
     app.mount("/mcp", mcp_app)
     if frontend_dist and Path(frontend_dist).is_dir():
+        @app.get("/login/password", include_in_schema=False)
+        def password_page():
+            return FileResponse(Path(frontend_dist) / "index.html", headers={"Cache-Control": "no-store"})
+
         app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
     return app

@@ -4,6 +4,7 @@ import base64
 import hashlib
 import os
 import secrets
+import ssl
 import time
 from dataclasses import dataclass, field
 from urllib.parse import urlencode, urlsplit
@@ -35,7 +36,8 @@ class SSOConfig:
 class SSOClient:
     def __init__(self, config, identities, *, http_client=None):
         self.config, self.identities = config, identities
-        self.http = http_client or httpx.Client(timeout=10, follow_redirects=False, trust_env=False)
+        self.http = http_client or httpx.Client(timeout=10, follow_redirects=False, trust_env=False,
+                                               verify=ssl.create_default_context())
         with identities._db() as db:
             db.execute("""CREATE TABLE IF NOT EXISTS sso_transactions (
                 state_hash TEXT PRIMARY KEY, binding_hash TEXT NOT NULL,
@@ -90,7 +92,7 @@ class SSOClient:
                 "nonce": nonce, "code_challenge": challenge, "code_challenge_method": "S256"})
             separator = "&" if urlsplit(metadata["authorization_endpoint"]).query else "?"
             return metadata["authorization_endpoint"] + separator + query, binding
-        except (httpx.HTTPError, ValueError, TypeError, KeyError) as error:
+        except (httpx.HTTPError, ValueError, TypeError, KeyError):
             raise SSOError("SSO 登录暂不可用，请稍后重试") from None
 
     def finish(self, state, binding, code):

@@ -71,13 +71,14 @@ def components(runtime, dataset_prefix=None):
 def build_app(runtime=None):
     from .api import create_app
     from .platform_seed import bootstrap_platform
+    from .sso import SSOConfig
 
     runtime = runtime or runtime_directory()
     identities, catalog, store = components(runtime)
     bootstrap_platform(store)
     return create_app(identities, store, catalog,
                       draft_parent=os.getenv("PROCUREMENT_DRAFT_PARENT", str(ROOT.parent / "procurement-schema-drafts")),
-                      frontend_dist=ROOT / "frontend/procurement-ontology/dist")
+                      frontend_dist=ROOT / "frontend/procurement-ontology/dist", sso_config=SSOConfig.from_env())
 
 
 @main.command("serve")
