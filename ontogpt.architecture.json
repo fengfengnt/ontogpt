@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "OntoGPT 架构",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/fengfengnt/ontogpt",
+      "revision": "9224d33f84cce7097c3519e1d9f0e2be46cec056",
+      "provider": "github"
+    }
+  },
+  "components": [
+    {
+      "id": "input",
+      "type": "backend",
+      "label": "输入与 CLI",
+      "sublabel": "文本 / PDF / 表格",
+      "sources": [
+        {
+          "path": "src/ontogpt/cli.py",
+          "line": 438,
+          "label": "extract CLI"
+        },
+        {
+          "path": "src/ontogpt/cli.py",
+          "line": 241,
+          "label": "PDF parser"
+        }
+      ],
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Web UI",
+      "sublabel": "FastAPI · 表单与结果",
+      "sources": [
+        {
+          "path": "src/ontogpt/webapp/main.py",
+          "line": 76,
+          "label": "FastAPI app"
+        },
+        {
+          "path": "src/ontogpt/webapp/main.py",
+          "line": 85,
+          "label": "engine factory"
+        }
+      ],
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "templates",
+      "type": "backend",
+      "label": "模板与数据模型",
+      "sublabel": "LinkML schema 驱动结构",
+      "sources": [
+        {
+          "path": "src/ontogpt/io/template_loader.py",
+          "line": 1,
+          "label": "template loader"
+        }
+      ],
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "engine",
+      "type": "backend",
+      "label": "SPIRES 抽取引擎",
+      "sublabel": "提示构造、解析、递归抽取",
+      "sources": [
+        {
+          "path": "src/ontogpt/engines/spires_engine.py",
+          "line": 92,
+          "end_line": 121,
+          "label": "extract flow"
+        },
+        {
+          "path": "src/ontogpt/engines/spires_engine.py",
+          "line": 782,
+          "end_line": 804,
+          "label": "parse and ground"
+        }
+      ],
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "llm",
+      "type": "external",
+      "label": "LLM 服务",
+      "sublabel": "模型调用与 completion",
+      "sources": [
+        {
+          "path": "src/ontogpt/engines/spires_engine.py",
+          "line": 123,
+          "label": "extraction internals"
+        }
+      ],
+      "row": 0,
+      "col": 3
+    },
+    {
+      "id": "grounding",
+      "type": "backend",
+      "label": "实体 Grounding",
+      "sublabel": "解析模型输出并绑定对象",
+      "sources": [
+        {
+          "path": "src/ontogpt/engines/spires_engine.py",
+          "line": 782,
+          "end_line": 804,
+          "label": "ground annotation"
+        }
+      ],
+      "row": 1,
+      "col": 3
+    },
+    {
+      "id": "validation",
+      "type": "backend",
+      "label": "术语校验",
+      "sublabel": "术语校验",
+      "sources": [
+        {
+          "path": "src/ontogpt/engines/spires_engine.py",
+          "line": 100,
+          "end_line": 120,
+          "label": "outer extraction validation"
+        }
+      ],
+      "row": 0,
+      "col": 4
+    },
+    {
+      "id": "export",
+      "type": "backend",
+      "label": "结果导出",
+      "sublabel": "YAML / JSON / RDF / HTML",
+      "sources": [
+        {
+          "path": "src/ontogpt/cli.py",
+          "line": 85,
+          "end_line": 135,
+          "label": "format dispatch"
+        }
+      ],
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "ontology",
+      "type": "external",
+      "label": "外部本体与词表",
+      "sublabel": "术语校验目标",
+      "sources": [
+        {
+          "path": "src/ontogpt/engines/spires_engine.py",
+          "line": 100,
+          "end_line": 120,
+          "label": "term validation"
+        }
+      ],
+      "row": 1,
+      "col": 4
+    }
+  ],
+  "connections": [
+    {
+      "from": "input",
+      "to": "engine",
+      "label": "输入文本"
+    },
+    {
+      "from": "web",
+      "to": "engine",
+      "label": "按 template 创建 SPIRES"
+    },
+    {
+      "from": "templates",
+      "to": "engine",
+      "label": "模板定义与字段"
+    },
+    {
+      "from": "engine",
+      "to": "llm",
+      "label": "prompt / completion",
+      "labelAt": [
+        850,
+        190
+      ]
+    },
+    {
+      "from": "llm",
+      "to": "engine",
+      "label": "模型响应",
+      "labelAt": [
+        850,
+        210
+      ]
+    },
+    {
+      "from": "engine",
+      "to": "grounding",
+      "label": "解析并实例化",
+      "labelAt": [
+        845,
+        340
+      ]
+    },
+    {
+      "from": "grounding",
+      "to": "validation",
+      "label": "grounded terms"
+    },
+    {
+      "from": "validation",
+      "to": "ontology",
+      "label": "查询与校验",
+      "labelAt": [
+        1170,
+        169
+      ]
+    },
+    {
+      "from": "grounding",
+      "to": "export",
+      "label": "ExtractionResult"
+    }
+  ],
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      70,
+      95
+    ],
+    "cols": 5,
+    "gapX": 35,
+    "gapY": 80,
+    "cellW": 190,
+    "cellH": 90
+  }
+}

@@ -1,0 +1,4 @@
+node_modules/
+.superpowers/
+workspace-prototype.html
+preview-*.png

@@ -154,3 +154,14 @@ LOG
 
 # label cache written by the term validation unit tests
 tests/output/term-validator-cache/
+
+# 本地索引、临时资料与视觉检查缓存
+/.codegraph/
+/.scratch/
+/ontogpt.architecture.visual-check.*
+
+# 本地环境密钥；无密钥的配置示例可提交
+.env.*
+!.env.example
+!.env.sample
+!.env.template
