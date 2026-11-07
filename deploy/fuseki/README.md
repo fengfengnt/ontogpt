@@ -2,6 +2,8 @@
 
 本配置用于采购本体 MVP 的 Ubuntu WSL Docker 环境。固定 Apache Jena Fuseki `6.2.0`，从官方二进制构建，校验 SHA-512；`Dockerfile` 固定 Java 基础镜像。端口 `127.0.0.1:3032`，Compose 项目 `procurement-ontology`，业务数据位于独立卷 `procurement-ontology_fuseki_data`。
 
+> 当前本地WSL已使用 `yunhezhiyuan-ontology-fuseki:6.2.0`，实际分组为 `yunhezhiyuan`，原数据卷保留；管理入口为 `/home/fengfeng/yunhezhiyuan/ontology/compose.sh`。以下独立试点启动流程与历史项目名不用于重建现有实例，现行切换/清理结果见 [镜像更名记录](../../docs/procurement-ontology/fuseki-image-rename-2026-11-04.md)。
+
 ## 初始化和启动
 
 先在 `deploy/fuseki/` 创建本地凭据和 Shiro 配置。以下 Python 片段在已有文件时拒绝覆盖；密码不打印，文件不提交 Git。仅用于本机试点，文件应保持只有部署账户可读。

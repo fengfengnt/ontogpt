@@ -6,11 +6,13 @@ from contextlib import asynccontextmanager, nullcontext
 from dataclasses import asdict
 from pathlib import Path
 from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import Field
 
@@ -88,7 +90,13 @@ class QuestionInput(DomainModel):
 
 
 def create_app(identities, store, catalog, *, draft_parent, client_factory=configured_client,
-               frontend_dist: Path | None = None, sso_config=None):
+               frontend_dist: Path | None = None, sso_config=None, public_origin: str | None = None):
+    origin = urlsplit(public_origin) if public_origin else None
+    if origin and (origin.scheme not in {"http", "https"} or not origin.hostname
+                   or origin.username or origin.password or "*" in origin.netloc
+                   or origin.path or origin.query or origin.fragment):
+        raise ValueError("PROCUREMENT_PUBLIC_ORIGIN must be an exact HTTP(S) origin")
+    secure_cookie = bool(origin and origin.scheme == "https")
     gate = store.gate
     identities.gate = catalog.gate = gate
     query = KnowledgeQuery(store)
@@ -99,8 +107,8 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
     mcp = create_mcp(query)
     mcp_app = mcp.streamable_http_app(streamable_http_path="/", stateless_http=True, json_response=True,
                                     transport_security=TransportSecuritySettings(
-                                        allowed_hosts=["127.0.0.1:*", "localhost:*"],
-                                        allowed_origins=["http://127.0.0.1:*", "http://localhost:*"]))
+                                        allowed_hosts=[origin.netloc] if origin else ["127.0.0.1:*", "localhost:*"],
+                                        allowed_origins=[public_origin] if origin else ["http://127.0.0.1:*", "http://localhost:*"]))
     provision_lock = threading.Lock()
 
     @asynccontextmanager
@@ -115,6 +123,8 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
                     app.state.sso.close()
 
     app = FastAPI(title="采购本体知识服务", lifespan=lifespan)
+    if origin:
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=[origin.hostname, "127.0.0.1", "localhost"])
     app.state.query, app.state.governance, app.state.extraction, app.state.mcp = query, governance, extraction, mcp
     app.state.identities, app.state.catalog, app.state.store = identities, catalog, store
     app.state.gate = gate
@@ -190,7 +200,7 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
     Actor = Annotated[Identity, Depends(identity)]
 
     def session_cookie(response, request, token, name=COOKIE):
-        response.set_cookie(name, token, httponly=True, secure=request.url.scheme == "https",
+        response.set_cookie(name, token, httponly=True, secure=secure_cookie or request.url.scheme == "https",
                             samesite="strict", max_age=3600)
 
     def clear_sessions(request, response):
@@ -201,7 +211,7 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
         if pending:
             identities.revoke_pending_session(pending)
         for name in (COOKIE, PENDING_COOKIE):
-            response.delete_cookie(name, httponly=True, secure=request.url.scheme == "https", samesite="strict")
+            response.delete_cookie(name, httponly=True, secure=secure_cookie or request.url.scheme == "https", samesite="strict")
 
     def scoped(request: Request, actor: Actor):
         platform_path = request.url.path.startswith("/v1/platform/")
@@ -244,7 +254,7 @@ def create_app(identities, store, catalog, *, draft_parent, client_factory=confi
             actor = identities.activate_pending(request.cookies.get(PENDING_COOKIE, ""))
         except VersionConflict:
             return error(409, "PENDING_ASSIGNMENT", "尚未分配企业，请等待超级管理员处理")
-        response.delete_cookie(PENDING_COOKIE, httponly=True, secure=request.url.scheme == "https", samesite="strict")
+        response.delete_cookie(PENDING_COOKIE, httponly=True, secure=secure_cookie or request.url.scheme == "https", samesite="strict")
         session_cookie(response, request, identities.issue_session(actor))
         return asdict(actor)
 

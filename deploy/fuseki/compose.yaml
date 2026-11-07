@@ -1,7 +1,7 @@
 name: procurement-ontology
 services:
   fuseki:
-    image: procurement-fuseki:6.2.0
+    image: yunhezhiyuan-ontology-fuseki:6.2.0
     build: .
     restart: unless-stopped
     ports:

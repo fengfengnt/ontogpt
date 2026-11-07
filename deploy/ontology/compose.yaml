@@ -1,0 +1,56 @@
+name: yunhezhiyuan
+services:
+  ontology-app:
+    image: yunhezhiyuan-ontology-${ONTOLOGY_VERSION:?read project VERSION}:local
+    container_name: yunhezhiyuan-ontology-${ONTOLOGY_VERSION:?read project VERSION}
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ${ONTOLOGY_DEPLOY_DIR:?set ONTOLOGY_DEPLOY_DIR}/runtime/.env
+    environment:
+      PROCUREMENT_RUNTIME_DIR: /runtime
+      PROCUREMENT_DRAFT_PARENT: /workspace/drafts
+      PROCUREMENT_FUSEKI_URL: http://ontology-fuseki:3030
+      FUSEKI_CREDENTIALS_FILE: /secrets/fuseki.json
+      PROCUREMENT_PUBLIC_ORIGIN: ${ONTOLOGY_PUBLIC_ORIGIN:-https://ontology.lvh.me}
+      PROCUREMENT_BIND_HOST: 0.0.0.0
+      PROCUREMENT_TRUSTED_PROXIES: ${ONTOLOGY_PROXY_IP:?set measured proxy peer}
+      SSL_CERT_FILE: /secrets/ca-bundle.pem
+      REQUESTS_CA_BUNDLE: /secrets/ca-bundle.pem
+    extra_hosts:
+      - sso.lvh.me:host-gateway
+    ports:
+      - 127.0.0.1:8002:8002
+    volumes:
+      - ${ONTOLOGY_DEPLOY_DIR}/runtime:/runtime
+      - ${ONTOLOGY_DEPLOY_DIR}/workspace:/workspace
+      - ${ONTOLOGY_DEPLOY_DIR}/secrets/credentials.json:/secrets/fuseki.json:ro
+      - ${ONTOLOGY_DEPLOY_DIR}/secrets/ca-bundle.pem:/secrets/ca-bundle.pem:ro
+    networks: [ontology]
+    depends_on: [ontology-fuseki]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health', timeout=5)"]
+      interval: 15s
+      timeout: 8s
+      retries: 8
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+  ontology-fuseki:
+    image: yunhezhiyuan-ontology-fuseki:6.2.0
+    container_name: ontology-fuseki
+    restart: unless-stopped
+    ports: [127.0.0.1:3032:3030]
+    volumes:
+      - ontology-fuseki-data:/data
+      - ${ONTOLOGY_DEPLOY_DIR}/secrets/shiro.ini:/data/shiro.ini:ro
+    networks: [ontology]
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+networks:
+  ontology: {}
+volumes:
+  ontology-fuseki-data:
+    external: true
+    name: procurement-ontology_fuseki_data

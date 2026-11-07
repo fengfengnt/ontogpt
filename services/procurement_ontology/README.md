@@ -4,6 +4,8 @@
 
 设计与评审入口：[文档索引](../../docs/procurement-ontology/README.md)。实施记录：[当前计划](../../docs/superpowers/plans/2026-10-19-procurement-ontology-mvp.md)。
 
+当前本地 WSL 已发布 **0.1.1**：[前端](https://ontology.lvh.me/)、[密码登录](https://ontology.lvh.me/login/password)、[后端接口文档](https://ontology.lvh.me/docs)。实际运行库位于 `/home/fengfeng/yunhezhiyuan/ontology/runtime`，Windows 旧运行目录保留为回退副本；以下本机启动命令用于独立开发，不与现有 WSL 运行库并行写入。
+
 ## 本机启动
 
 在工程根目录使用 Windows PowerShell；需要 Python、uv、Node.js，以及已启动的 WSL Fuseki。Fuseki 部署步骤见 [部署说明](../../deploy/fuseki/README.md)，本项目端口为 `127.0.0.1:3032`。
@@ -35,7 +37,7 @@ SSO 使用后端 OIDC 授权码流程，client secret 只保存在后端私有�
 
 本地 HTTPS 规划为 `https://ontology.lvh.me/`，对应回调 `https://ontology.lvh.me/v1/auth/sso/callback`、密码入口 `https://ontology.lvh.me/login/password`。这些地址依赖另行部署的工作台和共用代理，本功能的代码完成不表示部署完成。SSO 发起和回调必须来自配置的 HTTPS origin。认证源为该 client 启用 `authorization_code`、`client_secret_basic`、`openid profile` 和 S256 PKCE。
 
-本地 issuer 已按中心通知迁至 `https://sso.lvh.me`，OntoGPT 的 callback 和自身 Origin 保持不变；用户已取消旧 8443 兼容。当前部署镜像尚不含 SSO 模块，正式发布该模块还需为应用容器配置 `sso.lvh.me:host-gateway` 及本地公共 CA 信任，保留原有系统 CA。准备、身份连续性核对及实际验证见 [443 切换记录](../../docs/procurement-ontology/sso-issuer-443-2026-11-04.md)。
+本地 issuer 已为 `https://sso.lvh.me`，callback 和自身 Origin 保持不变，不兼容旧 8443。当前已发布 `yunhezhiyuan-ontology-0.1.1:local`，应用容器已配置 `sso.lvh.me:host-gateway` 和合并标准公共根的本地 CA bundle，严格 TLS 校验通过；SSO 模块已包含，待用户提供 client 凭据后启用。详见 [0.1.1 发布与访问地址](../../docs/procurement-ontology/deployment-sso-0.1.1-2026-11-04.md)，[443 切换记录](../../docs/procurement-ontology/sso-issuer-443-2026-11-04.md)保留切换历史。
 
 HTTP 客户端使用 Python 系统默认 TLS 信任并校验证书，禁止关闭验证。自签本地 CA 需在实际运行宿主/容器中受信；也可通过 Python 支持的 `SSL_CERT_FILE` 指定可信公共 CA bundle，不能把私钥或应用密钥写入该文件。共用 Nginx/网关及日志采集必须屏蔽认证回调的 query，不能记录 code、state、Cookie、Authorization 或凭据正文；本服务启动命令默认 `log_level=warning`，不要为认证路径开启请求内容日志。
 
