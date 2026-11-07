@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import type { Core, CytoscapeOptions } from 'cytoscape';
 import { vi } from 'vitest';
 import OntologyCanvas from './OntologyCanvas';
@@ -37,8 +37,11 @@ test('connected and isolated rectangular nodes do not overlap after initial layo
   try {
     render(<OntologyCanvas headless onPending={() => {}} />);
     await screen.findByRole('button', { name: 'cost' });
-    expect(core.nodes()).toHaveLength(3);
-    expect(core.edges()).toHaveLength(1);
+    // The item list can render before the graph's passive effect runs.
+    await waitFor(() => {
+      expect(core.nodes()).toHaveLength(3);
+      expect(core.edges()).toHaveLength(1);
+    });
     for (let seed = 1; seed <= 20; seed++) {
       let state = seed;
       random.mockImplementation(() => ((state = (1664525 * state + 1013904223) >>> 0) / 2 ** 32));
