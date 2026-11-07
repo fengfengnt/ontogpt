@@ -62,6 +62,7 @@ LLM_MODELS = [
     "anthropic/claude-opus-5",
     "anthropic/claude-sonnet-5",
     "anthropic/claude-haiku-4-5",
+    "deepseek/deepseek-flash",
     "ollama/llama3",
     "ollama/gemma3",
 ]
@@ -92,8 +93,9 @@ def get_engine(datamodel: str, llm_model: str):
 @app.get("/")
 def read_root(request: Request):
     return templates.TemplateResponse(
+        request,
         "form.html",
-        context={"request": request, "datamodels": DATAMODELS, "llm_models": LLM_MODELS},
+        {"datamodels": DATAMODELS, "llm_models": LLM_MODELS},
     )
 
 
@@ -110,7 +112,7 @@ def form_post(
     output = StringIO()
     html_exporter.export(extraction_output=ann, output=output)
     return templates.TemplateResponse(
-        "results.html", context={"request": request, "inner_html": output.getvalue()}
+        request, "results.html", {"inner_html": output.getvalue()}
     )
 
 

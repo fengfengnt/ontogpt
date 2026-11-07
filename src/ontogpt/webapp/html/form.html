@@ -17,6 +17,7 @@
       select,
       textarea {
         width: 100%;
+        box-sizing: border-box;
         padding: 5px;
         margin-bottom: 10px;
       }
@@ -61,7 +62,7 @@
           Select Schema:
           <select name="datamodel" id="datamodel">
             {% for key, value in datamodels.items() %}
-            <option value="{{ key }}">{{ key }} - {{ value }}</option>
+            <option value="{{ key }}" title="{{ value }}">{{ key }}</option>
             {% endfor %}
           </select>
         </div>
