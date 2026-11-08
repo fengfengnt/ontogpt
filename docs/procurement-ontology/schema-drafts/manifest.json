@@ -1,0 +1,497 @@
+{
+  "format_version": 1,
+  "validated_on": "2026-11-08",
+  "status": "DRAFT",
+  "human_business_review_required": true,
+  "registry_updated": false,
+  "runtime_activated": false,
+  "drafts": [
+    {
+      "draft_id": "gap-0126891f4a24498d97b9a536791113ed",
+      "status": "DRAFT",
+      "company_id": "test_buyer1",
+      "category_key": "computer",
+      "base_version": "v1",
+      "candidate_version": "v2",
+      "source_branch": "codex/schema-draft/gap-0126891f4a24498d97b9a536791113ed",
+      "source_commit": "7e98cb6e5cf5db052d87269f3d2a547136cf5bea",
+      "merge_commit": "dd5ca5365b0c79be4883cfde465fbdb1cd791fc7",
+      "proposal": {
+        "description": "记录报价中明确包含且不得额外加价的项目内容。",
+        "name": "quotation_inclusions",
+        "operation": "add_field",
+        "range": "string",
+        "target_class": "ConditionTemplate"
+      },
+      "source_revision_id": "source-5ec84132867e4e239ab06de4725ec420",
+      "source_simulated": false,
+      "source_span": {
+        "start": 1681,
+        "end": 1694,
+        "quote_sha256": "e205e4aa063d392d05c65a3fe249f02437ef8781aec57728435245c6f17c6060"
+      },
+      "base_artifacts": {
+        "yaml_sha256": "d3e4f4663a58a70dfcff15b441eefda510c89ecd121370ccd8795a8d18aeb942",
+        "python_sha256": "5a2f80ed243e2a10dfcd7b2a47b78450aba2c0742edf4ca5533f51ac317fd1be"
+      },
+      "artifacts": {
+        "yaml": {
+          "path": "gap-0126891f4a24498d97b9a536791113ed/test_buyer1_computer.yaml",
+          "sha256": "2a5f816a54ec303d4a35228a2bbd299d587b72a5a8734830a82b3f4efa47ffaf"
+        },
+        "python": {
+          "path": "gap-0126891f4a24498d97b9a536791113ed/test_buyer1_computer.py",
+          "sha256": "0818120b018eb6773bb9e48bd4c88a9ae085cb24a04ce5856db51fcb61620503"
+        }
+      },
+      "technical_validation": {
+        "purely_additive": true,
+        "regeneration_exact": true,
+        "ast_valid": true,
+        "isolated_registered_loader_valid": true,
+        "pydantic_json_schema_valid": true
+      },
+      "source_span_verified": true,
+      "business_review": "PENDING"
+    },
+    {
+      "draft_id": "gap-365d6f39cb5a44309380c06c3b99269e",
+      "status": "DRAFT",
+      "company_id": "test_buyer1",
+      "category_key": "computer",
+      "base_version": "v1",
+      "candidate_version": "v2",
+      "source_branch": "codex/schema-draft/gap-365d6f39cb5a44309380c06c3b99269e",
+      "source_commit": "bd4f6a64195d038c14fef62186225ae720084263",
+      "merge_commit": "b6e8693da9af586bde02396e6b7322a75cf4a409",
+      "proposal": {
+        "description": "笔记本价格台账中记录的采购单价，原文要求记录采购单价，当前 schema 无对应字段。",
+        "name": "procurement_unit_price",
+        "operation": "add_field",
+        "range": "float",
+        "target_class": "CollectionField"
+      },
+      "source_revision_id": "source-5ec84132867e4e239ab06de4725ec420",
+      "source_simulated": false,
+      "source_span": {
+        "start": 1906,
+        "end": 1941,
+        "quote_sha256": "eaf1bdf6824b53043f17fab71e10d20d228ee9c490a53a562af91f1d7b9818fe"
+      },
+      "base_artifacts": {
+        "yaml_sha256": "d3e4f4663a58a70dfcff15b441eefda510c89ecd121370ccd8795a8d18aeb942",
+        "python_sha256": "5a2f80ed243e2a10dfcd7b2a47b78450aba2c0742edf4ca5533f51ac317fd1be"
+      },
+      "artifacts": {
+        "yaml": {
+          "path": "gap-365d6f39cb5a44309380c06c3b99269e/test_buyer1_computer.yaml",
+          "sha256": "27e79704a28f67754062fb56cc6d795348c63a222e837577eae47698815791e0"
+        },
+        "python": {
+          "path": "gap-365d6f39cb5a44309380c06c3b99269e/test_buyer1_computer.py",
+          "sha256": "4082fa407e45ef12b4343a85abc7d07ada6e1628a861e58cdc9fee6a0c97fe6e"
+        }
+      },
+      "technical_validation": {
+        "purely_additive": true,
+        "regeneration_exact": true,
+        "ast_valid": true,
+        "isolated_registered_loader_valid": true,
+        "pydantic_json_schema_valid": true
+      },
+      "source_span_verified": true,
+      "business_review": "PENDING"
+    },
+    {
+      "draft_id": "gap-651ce65f78644509bf0b29507dc1557b",
+      "status": "DRAFT",
+      "company_id": "test_supplier1",
+      "category_key": "computer",
+      "base_version": "v1",
+      "candidate_version": "v2",
+      "source_branch": "codex/schema-draft/gap-651ce65f78644509bf0b29507dc1557b",
+      "source_commit": "ee0e19dcf8bf8d88489cfaf17f4ce2e2e68c5383",
+      "merge_commit": "8ab63a2a24187ba0ae546b5bbecb84af3fa08cf9",
+      "proposal": {
+        "description": "合同或报价中约定的逾期付款违约金条款原文，例如每日费率及累计上限；保留原文表述，不自动计算金额。",
+        "name": "late_payment_penalty_text",
+        "operation": "add_field",
+        "range": "string",
+        "target_class": "PricingStrategy"
+      },
+      "source_revision_id": "source-552eae032ae24ed2a3cdd16a341f1247",
+      "source_simulated": true,
+      "source_span": {
+        "start": 3431,
+        "end": 3447,
+        "quote_sha256": "bcd26752bbcb3df3677bf9c8960c0dc756b6fcb04515f4b02f6f05adfcd7ff63"
+      },
+      "base_artifacts": {
+        "yaml_sha256": "835de98c5303c4d94a7742c650cf7d288f25a77d1402851e4ebfc81a30e79602",
+        "python_sha256": "e43ac48d9dfd07dea7e50c7fffb2ffea4fdb7194ba7ee3ef4afd32e5de252bea"
+      },
+      "artifacts": {
+        "yaml": {
+          "path": "gap-651ce65f78644509bf0b29507dc1557b/test_supplier1_computer.yaml",
+          "sha256": "e281518a05b04a26005a845d29b6c62db34fe26e972014c4a50af6c3f5d2e35d"
+        },
+        "python": {
+          "path": "gap-651ce65f78644509bf0b29507dc1557b/test_supplier1_computer.py",
+          "sha256": "d923e11dcee4e8f6ba274588e312623d0747cf7a4f84a3c0dc22e6db6fec299a"
+        }
+      },
+      "technical_validation": {
+        "purely_additive": true,
+        "regeneration_exact": true,
+        "ast_valid": true,
+        "isolated_registered_loader_valid": true,
+        "pydantic_json_schema_valid": true
+      },
+      "source_span_verified": true,
+      "business_review": "PENDING"
+    },
+    {
+      "draft_id": "gap-699aae1b42804daaa9ed0071228cf232",
+      "status": "DRAFT",
+      "company_id": "test_buyer1",
+      "category_key": "computer",
+      "base_version": "v1",
+      "candidate_version": "v2",
+      "source_branch": "codex/schema-draft/gap-699aae1b42804daaa9ed0071228cf232",
+      "source_commit": "5435a63716bafe1f196fe9d068ba82939ba03222",
+      "merge_commit": "7a1ff7b0159723b935a7dc99d0a60563f8b23e6c",
+      "proposal": {
+        "description": "评标委员会的人数，原文明确为5人。",
+        "name": "evaluation_committee_size",
+        "operation": "add_field",
+        "range": "integer",
+        "target_class": "ProcessNote"
+      },
+      "source_revision_id": "source-f019a01d4dda4fe888e451639177666e",
+      "source_simulated": true,
+      "source_span": {
+        "start": 6022,
+        "end": 6035,
+        "quote_sha256": "47e5186ea4b16d3d9b95f893819ed90b3068941fe8927212748b71fc124d90f3"
+      },
+      "base_artifacts": {
+        "yaml_sha256": "d3e4f4663a58a70dfcff15b441eefda510c89ecd121370ccd8795a8d18aeb942",
+        "python_sha256": "5a2f80ed243e2a10dfcd7b2a47b78450aba2c0742edf4ca5533f51ac317fd1be"
+      },
+      "artifacts": {
+        "yaml": {
+          "path": "gap-699aae1b42804daaa9ed0071228cf232/test_buyer1_computer.yaml",
+          "sha256": "a91bd2f4a6b8677250a583e223f7477472ff37852d2dd420e785f8df3445ae42"
+        },
+        "python": {
+          "path": "gap-699aae1b42804daaa9ed0071228cf232/test_buyer1_computer.py",
+          "sha256": "8ead1b23e1100d41fbc6bab41e31e917ad61e430f83561b006981499ee485435"
+        }
+      },
+      "technical_validation": {
+        "purely_additive": true,
+        "regeneration_exact": true,
+        "ast_valid": true,
+        "isolated_registered_loader_valid": true,
+        "pydantic_json_schema_valid": true
+      },
+      "source_span_verified": true,
+      "business_review": "PENDING"
+    },
+    {
+      "draft_id": "gap-700cd6c30feb4d718fca341dfe5922ba",
+      "status": "DRAFT",
+      "company_id": "test_buyer1",
+      "category_key": "computer",
+      "base_version": "v1",
+      "candidate_version": "v2",
+      "source_branch": "codex/schema-draft/gap-700cd6c30feb4d718fca341dfe5922ba",
+      "source_commit": "cf32e6a48b104ab95e02e016c10b2b530517afe7",
+      "merge_commit": "dc2a371a1396d610f13f816f500c261c03214802",
+      "proposal": {
+        "description": "记录某品牌是否属于采购方设定的品牌入围池，以及该品牌是否可因集团需求增减；原文提及联想、戴尔、惠普、华为，但当前 schema 无字段表达品牌入围池成员关系。",
+        "name": "brand_pool_membership",
+        "operation": "add_field",
+        "range": "string",
+        "target_class": "TermDefinition"
+      },
+      "source_revision_id": "source-5ec84132867e4e239ab06de4725ec420",
+      "source_simulated": false,
+      "source_span": {
+        "start": 1129,
+        "end": 1177,
+        "quote_sha256": "8971aee4eff33fd353d30c4176801ce364752a80aff52a8867718cea306750bc"
+      },
+      "base_artifacts": {
+        "yaml_sha256": "d3e4f4663a58a70dfcff15b441eefda510c89ecd121370ccd8795a8d18aeb942",
+        "python_sha256": "5a2f80ed243e2a10dfcd7b2a47b78450aba2c0742edf4ca5533f51ac317fd1be"
+      },
+      "artifacts": {
+        "yaml": {
+          "path": "gap-700cd6c30feb4d718fca341dfe5922ba/test_buyer1_computer.yaml",
+          "sha256": "204108b1e188df346b56a3ba39f959b7c8aee5c93531655072c1a14848e170c3"
+        },
+        "python": {
+          "path": "gap-700cd6c30feb4d718fca341dfe5922ba/test_buyer1_computer.py",
+          "sha256": "a0d7b6e0a0f6a598a316703b11adb0322662be5d300938a4cffeeee3722976eb"
+        }
+      },
+      "technical_validation": {
+        "purely_additive": true,
+        "regeneration_exact": true,
+        "ast_valid": true,
+        "isolated_registered_loader_valid": true,
+        "pydantic_json_schema_valid": true
+      },
+      "source_span_verified": true,
+      "business_review": "PENDING"
+    },
+    {
+      "draft_id": "gap-7d3a4286f5784c0295c8da7e3b0a4ef3",
+      "status": "DRAFT",
+      "company_id": "test_buyer1",
+      "category_key": "computer",
+      "base_version": "v1",
+      "candidate_version": "v2",
+      "source_branch": "codex/schema-draft/gap-7d3a4286f5784c0295c8da7e3b0a4ef3",
+      "source_commit": "c1ff4de3c7ae151e77f0512b884b5e000b2edc11",
+      "merge_commit": "9007a2f90e26278c2007a18ce599f5e3023cea8e",
+      "proposal": {
+        "description": "采购数量达到一定规模时适用的阶梯降价或专项折扣安排，如≥50台大单由采购部单独谈判专项折扣。",
+        "name": "volume_discount_tier",
+        "operation": "add_field",
+        "range": "string",
+        "target_class": "ConditionTemplate"
+      },
+      "source_revision_id": "source-5ec84132867e4e239ab06de4725ec420",
+      "source_simulated": false,
+      "source_span": {
+        "start": 1465,
+        "end": 1501,
+        "quote_sha256": "db81754d96217e8169266ede8f5fc467143397599dbc35acb2cf166cb38a68cc"
+      },
+      "base_artifacts": {
+        "yaml_sha256": "d3e4f4663a58a70dfcff15b441eefda510c89ecd121370ccd8795a8d18aeb942",
+        "python_sha256": "5a2f80ed243e2a10dfcd7b2a47b78450aba2c0742edf4ca5533f51ac317fd1be"
+      },
+      "artifacts": {
+        "yaml": {
+          "path": "gap-7d3a4286f5784c0295c8da7e3b0a4ef3/test_buyer1_computer.yaml",
+          "sha256": "6a7a58478a0f6e3aa8c54647a45ba9ac60dbd50b3703c3e60dbf349fa9846573"
+        },
+        "python": {
+          "path": "gap-7d3a4286f5784c0295c8da7e3b0a4ef3/test_buyer1_computer.py",
+          "sha256": "2ad84fcc8b05265df63b0b0c6cfa6352725a1352432c73b89041f60957a04877"
+        }
+      },
+      "technical_validation": {
+        "purely_additive": true,
+        "regeneration_exact": true,
+        "ast_valid": true,
+        "isolated_registered_loader_valid": true,
+        "pydantic_json_schema_valid": true
+      },
+      "source_span_verified": true,
+      "business_review": "PENDING"
+    },
+    {
+      "draft_id": "gap-7d8adc44050a4534bda3d142ce3c3249",
+      "status": "DRAFT",
+      "company_id": "test_supplier1",
+      "category_key": "computer",
+      "base_version": "v1",
+      "candidate_version": "v2",
+      "source_branch": "codex/schema-draft/gap-7d8adc44050a4534bda3d142ce3c3249",
+      "source_commit": "42710af4a807e9a43dd202d5e8320cecc9518c33",
+      "merge_commit": "465dc5458f9e93dbf6c0d04fd23db648f208fa82",
+      "proposal": {
+        "description": "材料中列出的受邀参与方名称清单（如戴尔、惠普、华为、华硕、京东、苏宁等），用于表达邀请名单这一当前 schema 无法承载的信息。",
+        "name": "invited_supplier_names",
+        "operation": "add_field",
+        "range": "string",
+        "target_class": "ProjectEvidence"
+      },
+      "source_revision_id": "source-552eae032ae24ed2a3cdd16a341f1247",
+      "source_simulated": true,
+      "source_span": {
+        "start": 1558,
+        "end": 1585,
+        "quote_sha256": "07d6bce47374458bab0ad815c39495ee12b1316f2318de199739a224fc2a4dfb"
+      },
+      "base_artifacts": {
+        "yaml_sha256": "835de98c5303c4d94a7742c650cf7d288f25a77d1402851e4ebfc81a30e79602",
+        "python_sha256": "e43ac48d9dfd07dea7e50c7fffb2ffea4fdb7194ba7ee3ef4afd32e5de252bea"
+      },
+      "artifacts": {
+        "yaml": {
+          "path": "gap-7d8adc44050a4534bda3d142ce3c3249/test_supplier1_computer.yaml",
+          "sha256": "7a343e18847bda6938b5ac7b5a1c65ca1762ade788f36304d94aee922001bd7e"
+        },
+        "python": {
+          "path": "gap-7d8adc44050a4534bda3d142ce3c3249/test_supplier1_computer.py",
+          "sha256": "7a248a369890ee91ad7ef727c28307c2fbebb01b3056132f6d799fe0763186ce"
+        }
+      },
+      "technical_validation": {
+        "purely_additive": true,
+        "regeneration_exact": true,
+        "ast_valid": true,
+        "isolated_registered_loader_valid": true,
+        "pydantic_json_schema_valid": true
+      },
+      "source_span_verified": true,
+      "business_review": "PENDING"
+    },
+    {
+      "draft_id": "gap-c75c7dc1055b45c8abdebdd2378eeb36",
+      "status": "DRAFT",
+      "company_id": "test_buyer1",
+      "category_key": "computer",
+      "base_version": "v1",
+      "candidate_version": "v2",
+      "source_branch": "codex/schema-draft/gap-c75c7dc1055b45c8abdebdd2378eeb36",
+      "source_commit": "f9e0d75c09e75481f4cab3ec204ef5dc5e80d1f7",
+      "merge_commit": "4b1cb228563c885da6c087e464dac010a8a4a390",
+      "proposal": {
+        "description": "到货验收抽检比例，原文为20%，用于表达抽检比例这一当前 schema 无法承载的验收要求。",
+        "name": "acceptance_inspection_ratio",
+        "operation": "add_field",
+        "range": "string",
+        "target_class": "ConditionTemplate"
+      },
+      "source_revision_id": "source-f019a01d4dda4fe888e451639177666e",
+      "source_simulated": true,
+      "source_span": {
+        "start": 10632,
+        "end": 10680,
+        "quote_sha256": "23326e391c3f570e0801e102cb918e08ade66df59ac5a307d40fd71a89d38270"
+      },
+      "base_artifacts": {
+        "yaml_sha256": "d3e4f4663a58a70dfcff15b441eefda510c89ecd121370ccd8795a8d18aeb942",
+        "python_sha256": "5a2f80ed243e2a10dfcd7b2a47b78450aba2c0742edf4ca5533f51ac317fd1be"
+      },
+      "artifacts": {
+        "yaml": {
+          "path": "gap-c75c7dc1055b45c8abdebdd2378eeb36/test_buyer1_computer.yaml",
+          "sha256": "42c6f68eda3904edbdaa1af103465b547a39e8c94fe41b1671b128a402ae13c0"
+        },
+        "python": {
+          "path": "gap-c75c7dc1055b45c8abdebdd2378eeb36/test_buyer1_computer.py",
+          "sha256": "4f242cbacd556ac1b53d5c0fff100e61c3a7e84aa165e2d0ac3050c0424a0c18"
+        }
+      },
+      "technical_validation": {
+        "purely_additive": true,
+        "regeneration_exact": true,
+        "ast_valid": true,
+        "isolated_registered_loader_valid": true,
+        "pydantic_json_schema_valid": true
+      },
+      "source_span_verified": true,
+      "business_review": "PENDING"
+    },
+    {
+      "draft_id": "gap-ce89ebac0e5c4e77b28010ecb3c70e5b",
+      "status": "DRAFT",
+      "company_id": "test_supplier1",
+      "category_key": "computer",
+      "base_version": "v1",
+      "candidate_version": "v2",
+      "source_branch": "codex/schema-draft/gap-ce89ebac0e5c4e77b28010ecb3c70e5b",
+      "source_commit": "561b75902cece46edf4192f482556998bf30a886",
+      "merge_commit": "2eb65870085ececc1523fe212501ffd96ae71fec",
+      "proposal": {
+        "description": "合同付款条件原文，例如验收后付款比例、质保金比例及压款期限；保留原文表述，不自动换算金额。",
+        "name": "payment_terms_text",
+        "operation": "add_field",
+        "range": "string",
+        "target_class": "PricingStrategy"
+      },
+      "source_revision_id": "source-552eae032ae24ed2a3cdd16a341f1247",
+      "source_simulated": true,
+      "source_span": {
+        "start": 3287,
+        "end": 3315,
+        "quote_sha256": "c4dfb42a9859ed163bde0587bf4717a10a30bc6e026a2e4678033ae5b0558a55"
+      },
+      "base_artifacts": {
+        "yaml_sha256": "835de98c5303c4d94a7742c650cf7d288f25a77d1402851e4ebfc81a30e79602",
+        "python_sha256": "e43ac48d9dfd07dea7e50c7fffb2ffea4fdb7194ba7ee3ef4afd32e5de252bea"
+      },
+      "artifacts": {
+        "yaml": {
+          "path": "gap-ce89ebac0e5c4e77b28010ecb3c70e5b/test_supplier1_computer.yaml",
+          "sha256": "f9f14532ce8d984c676a7790c4941caa65ef15511f7660477719b399ccdcae0e"
+        },
+        "python": {
+          "path": "gap-ce89ebac0e5c4e77b28010ecb3c70e5b/test_supplier1_computer.py",
+          "sha256": "e703998abd73f9f6e1a0e131891753c34eee61582fd12c8a2d8b5f062e8c7099"
+        }
+      },
+      "technical_validation": {
+        "purely_additive": true,
+        "regeneration_exact": true,
+        "ast_valid": true,
+        "isolated_registered_loader_valid": true,
+        "pydantic_json_schema_valid": true
+      },
+      "source_span_verified": true,
+      "business_review": "PENDING"
+    },
+    {
+      "draft_id": "gap-da259bccdfcd4d40b52851a7f3874d33",
+      "status": "DRAFT",
+      "company_id": "test_buyer1",
+      "category_key": "computer",
+      "base_version": "v1",
+      "candidate_version": "v2",
+      "source_branch": "codex/schema-draft/gap-da259bccdfcd4d40b52851a7f3874d33",
+      "source_commit": "80f84c6c977db89f4a5c540f7d5d3c2745fb5a43",
+      "merge_commit": "cc616f92641f96a7da6d24b914632225be15cf04",
+      "proposal": {
+        "description": "表示两个条件模板之间存在互相冲突或矛盾的关系，例如“原厂上门”与“仅提供送修”，用于审核时识别矛盾。",
+        "name": "conflicts_with",
+        "operation": "add_relation",
+        "range": "string",
+        "target_class": null
+      },
+      "source_revision_id": "source-b567cc7eceb84492b0523447f06a5fda",
+      "source_simulated": true,
+      "source_span": {
+        "start": 0,
+        "end": 100,
+        "quote_sha256": "bfb5eaec1e8f183b413a274a475c122ce286f44a83103108e0e1663ea74e41ee"
+      },
+      "base_artifacts": {
+        "yaml_sha256": "d3e4f4663a58a70dfcff15b441eefda510c89ecd121370ccd8795a8d18aeb942",
+        "python_sha256": "5a2f80ed243e2a10dfcd7b2a47b78450aba2c0742edf4ca5533f51ac317fd1be"
+      },
+      "artifacts": {
+        "yaml": {
+          "path": "gap-da259bccdfcd4d40b52851a7f3874d33/test_buyer1_computer.yaml",
+          "sha256": "6d3994548c10c3d1eb5a32c9c2a80e34d7a166cbd87f1e7b513bf658d94d25c1"
+        },
+        "python": {
+          "path": "gap-da259bccdfcd4d40b52851a7f3874d33/test_buyer1_computer.py",
+          "sha256": "56a14a6b937175f7a98f17116aba09f342425cb6412df25bc3b03e904c337c61"
+        }
+      },
+      "technical_validation": {
+        "purely_additive": true,
+        "regeneration_exact": true,
+        "ast_valid": true,
+        "isolated_registered_loader_valid": true,
+        "pydantic_json_schema_valid": true
+      },
+      "source_span_verified": true,
+      "business_review": "PENDING"
+    }
+  ],
+  "integration_validation": {
+    "backend_passed": 114,
+    "backend_skipped": 47,
+    "frontend_passed": 18,
+    "frontend_build_passed": true,
+    "activation_regressions_passed": 5
+  }
+}
