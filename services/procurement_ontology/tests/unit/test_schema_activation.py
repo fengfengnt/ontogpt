@@ -1,6 +1,5 @@
 """Activation commits pointer and audit together; CLI delegates authenticated HTTP."""
 
-import copy
 import json
 import shutil
 import sqlite3
@@ -27,14 +26,7 @@ def catalog_setup(tmp_path):
     identities.mark_company_ready("test_buyer1", platform)
     templates = tmp_path / "templates"
     shutil.copytree(ROOT / "src/ontogpt/templates/company", templates / "company")
-    v1 = templates / "company/test_buyer1/computer/v1"
-    shutil.copytree(v1, v1.with_name("v2"))
     registry = yaml.safe_load((ROOT / "services/procurement_ontology/schema_registry.yaml").read_text())
-    v2 = copy.deepcopy(registry["schemas"][0])
-    v2["version"] = "v2"
-    for field in ("yaml_path", "python_path"):
-        v2[field] = v2[field].replace("/v1/", "/v2/")
-    registry["schemas"].append(v2)
     registry_path = tmp_path / "registry.yaml"
     registry_path.write_text(yaml.safe_dump(registry), encoding="utf-8")
     catalog = SchemaCatalog(identities.path, registry_path=registry_path, template_root=templates)

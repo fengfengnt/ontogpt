@@ -1,11 +1,13 @@
 # 企业提取 schema 设计
 
-状态：第一版 YAML/Python 已生成，生成可重复、注册表加载、依赖摘要和 wheel 安装后加载已通过离线检查；真实模型提取和业务核对仍待贯通验收。
+状态：v1 及整合后的 v2 YAML/Python 已生成，生成可重复、注册表加载、依赖摘要和 wheel 安装后加载已通过离线检查；真实模型提取和业务核对仍待贯通验收。v2 本轮仅在源码注册，未部署或切换运行版本。
 
 | 企业与品类 | 文档 | 目标根类 |
 | --- | --- | --- |
 | `test_buyer1 / computer / v1` | [甲方 schema](test_buyer1/computer/v1.md) | `BuyerComputerExtraction` |
 | `test_supplier1 / computer / v1` | [乙方 schema](test_supplier1/computer/v1.md) | `SupplierComputerExtraction` |
+| `test_buyer1 / computer / v2` | [整合后的 v2](v2.md) | `BuyerComputerExtraction` |
+| `test_supplier1 / computer / v2` | [整合后的 v2](v2.md) | `SupplierComputerExtraction` |
 
 两家公司使用各自文档、YAML 和生成模块，即使某些字段内容相同也不合并为一个业务 schema。通用来源、审核、权限和发布模型由服务维护；企业 YAML 负责描述业务提取形状和提取提示。
 
@@ -37,4 +39,4 @@
 
 ## 已归档的待审候选
 
-2026-11-08 已将 10 份独立生成的 v2 草案及其原始提交历史收拢到 `dev-fengfeng`，详见[待审候选索引与校验记录](../schema-drafts/README.md)。候选仍待业务审核，没有登记、部署或启用；现行 v1 保持。
+2026-11-08 已将 10 份独立生成的 v2 草案及其原始提交历史收拢到 `dev-fengfeng`，详见[待审候选索引与校验记录](../schema-drafts/README.md)。随后按用户要求整合为买方、供应商各一份 [v2](v2.md)，在源码注册表与 v1 并存；原始候选和业务待审状态保留。本次未部署或切换运行启用指针。

@@ -79,7 +79,9 @@ def test_imported_type_schema_checksum_is_checked(tmp_path):
 def test_installed_template_artifacts(tmp_path):
     from procurement_ontology.schema_loader import load_registered_template
 
-    load_registered_template("test_buyer1", "computer", "v1")
+    for company in ("test_buyer1", "test_supplier1"):
+        for version in ("v1", "v2"):
+            load_registered_template(company, "computer", version)
     result = subprocess.run(["uv", "build", "--wheel", "--out-dir", str(tmp_path / "dist")],
                             cwd=ROOT, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr[-1500:]
@@ -87,8 +89,10 @@ def test_installed_template_artifacts(tmp_path):
     extracted = tmp_path / "installed"
     with zipfile.ZipFile(wheel) as archive:
         names = set(archive.namelist())
-        assert "ontogpt/templates/company/test_buyer1/computer/v1/test_buyer1_computer.yaml" in names
-        assert "ontogpt/templates/company/test_supplier1/computer/v1/test_supplier1_computer.py" in names
+        for company in ("test_buyer1", "test_supplier1"):
+            for version in ("v1", "v2"):
+                for suffix in ("yaml", "py"):
+                    assert f"ontogpt/templates/company/{company}/computer/{version}/{company}_computer.{suffix}" in names
         archive.extractall(extracted)
     program = """
 import sys
@@ -97,9 +101,10 @@ import ontogpt
 assert ontogpt.__file__.startswith(sys.argv[1])
 from procurement_ontology.schema_loader import load_registered_template
 for company in ('test_buyer1', 'test_supplier1'):
-    binding = load_registered_template(company, 'computer', 'v1')
-    assert str(binding.yaml_path).startswith(sys.argv[1])
-    binding.python_class.model_validate({})
+    for version in ('v1', 'v2'):
+        binding = load_registered_template(company, 'computer', version)
+        assert str(binding.yaml_path).startswith(sys.argv[1])
+        binding.python_class.model_validate({})
 print('installed enterprise templates load')
 """
     check = subprocess.run([sys.executable, "-c", program, str(extracted)],
