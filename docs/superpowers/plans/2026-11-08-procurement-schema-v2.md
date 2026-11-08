@@ -42,4 +42,4 @@
 - [x] **Step 3:** 从原始 YAML 累加定义并生成两套 Python，追加注册项；激活夹具直接使用真实 v1/v2，取消伪造 v2 的步骤。
 - [x] **Step 4:** 执行 `services/procurement_ontology/.venv/Scripts/python.exe -m pytest -q services/procurement_ontology/tests/unit/test_schema_v2.py services/procurement_ontology/tests/unit/test_schema_activation.py services/procurement_ontology/tests/unit/test_schema_loader.py`，预期全部通过。
 - [x] **Step 5:** 更新 v2 来源及使用边界文档；在服务目录执行 `.venv/Scripts/python.exe -m pytest -q`，预期无失败；外部环境依赖的跳过项明确列出。
-- [ ] **Step 6:** 独立审阅全部差异，修复重要问题，核验 v1/归档/备份不变；提交命名文件并推送 `origin dev-fengfeng`，核对远端 SHA 与干净状态。不执行部署或激活。
+- [x] **Step 6:** 独立审阅全部差异，修复重要问题，核验 v1/归档/备份不变；提交命名文件并推送 `origin dev-fengfeng`，核对远端 SHA 与干净状态。不执行部署或激活。
