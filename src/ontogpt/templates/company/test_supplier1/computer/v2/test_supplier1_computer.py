@@ -79,7 +79,7 @@ linkml_meta = LinkMLMeta({'default_prefix': 'supplier',
                              'prefix_reference': 'https://w3id.org/linkml/'},
                   'supplier': {'prefix_prefix': 'supplier',
                                'prefix_reference': 'https://example.org/procurement/test_supplier1/computer/v1/'}},
-     'source_file': 'D:\\Code\\ontogpt\\src\\ontogpt\\templates\\company\\test_supplier1\\computer\\v2\\test_supplier1_computer.yaml',
+     'source_file': 'src/ontogpt/templates/company/test_supplier1/computer/v2/test_supplier1_computer.yaml',
      'title': '乙方电脑供给与内部策略知识候选提取'} )
 
 class SupplierRelationType(str, Enum):

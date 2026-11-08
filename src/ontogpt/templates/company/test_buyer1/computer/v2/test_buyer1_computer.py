@@ -78,7 +78,7 @@ linkml_meta = LinkMLMeta({'default_prefix': 'buyer',
                             'prefix_reference': 'https://example.org/procurement/test_buyer1/computer/v1/'},
                   'linkml': {'prefix_prefix': 'linkml',
                              'prefix_reference': 'https://w3id.org/linkml/'}},
-     'source_file': 'D:\\Code\\ontogpt\\src\\ontogpt\\templates\\company\\test_buyer1\\computer\\v2\\test_buyer1_computer.yaml',
+     'source_file': 'src/ontogpt/templates/company/test_buyer1/computer/v2/test_buyer1_computer.yaml',
      'title': '甲方电脑品类知识候选提取'} )
 
 class BuyerConditionCategory(str, Enum):

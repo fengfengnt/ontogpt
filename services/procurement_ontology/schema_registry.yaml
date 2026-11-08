@@ -34,7 +34,7 @@ schemas:
   python_path: company/test_buyer1/computer/v2/test_buyer1_computer.py
   root_class: BuyerComputerExtraction
   yaml_sha256: 3e81454ddc72ca6eb6a85883679707959a5281fea90e38be83f98c6c4aa5a65b
-  python_sha256: 4feab7360dd7269a359c0df8c12e4be0158bc106c206421572a043c2baaf9e82
+  python_sha256: 6745b63823e11e582b4a83d8d86930bf4dee77a1b642550272a4ff8cc077aac3
   generator_version: 1.12.1
   dependency_versions:
     linkml: 1.12.1
@@ -48,7 +48,7 @@ schemas:
   python_path: company/test_supplier1/computer/v2/test_supplier1_computer.py
   root_class: SupplierComputerExtraction
   yaml_sha256: 68fc8a54c037911dfc04ad1476645766dd529383032731953f688969edf75a93
-  python_sha256: 219cd44a246948e8b6922820dbae6e12a486f3f885a009868c1858ad5f87c9e7
+  python_sha256: 056bca1313db3f7d71fbf6d9f40cd3ea4c12b260bec6f9017bc241a373b03f6c
   generator_version: 1.12.1
   dependency_versions:
     linkml: 1.12.1

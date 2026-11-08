@@ -20,7 +20,7 @@ ARCHIVE = ROOT / "docs/procurement-ontology/schema-drafts"
 
 
 @pytest.mark.parametrize("company,count", [("test_buyer1", 7), ("test_supplier1", 3)])
-def test_v2_preserves_v1_and_combines_archived_additions(company, count):
+def test_v2_preserves_v1_and_combines_archived_additions(company, count, tmp_path, monkeypatch):
     v1 = load_registered_template(company, "computer", "v1")
     v2 = load_registered_template(company, "computer", "v2")
     base = yaml.safe_load(v1.yaml_path.read_text(encoding="utf-8"))
@@ -47,7 +47,13 @@ def test_v2_preserves_v1_and_combines_archived_additions(company, count):
     group = "collection_fields" if company == "test_buyer1" else "project_evidence"
     legacy = {group: [{"label": "v1 已有条目", "statement": "保留原文陈述", "evidence_quote": "保留原文"}]}
     assert v2.python_class.model_validate(legacy).model_dump(exclude_none=True) == v1.python_class.model_validate(legacy).model_dump(exclude_none=True)
-    assert ensure_utf8_coding_cookie(PydanticGenerator(str(v2.yaml_path)).serialize()).encode("utf-8") == v2.python_path.read_bytes()
+    relative_yaml = v2.yaml_path.relative_to(ROOT)
+    copied_yaml = tmp_path / relative_yaml
+    copied_yaml.parent.mkdir(parents=True)
+    copied_yaml.write_bytes(v2.yaml_path.read_bytes())
+    monkeypatch.chdir(tmp_path)
+    generated = ensure_utf8_coding_cookie(PydanticGenerator(relative_yaml.as_posix()).serialize())
+    assert generated.encode("utf-8") == v2.python_path.read_bytes()
 
 
 @pytest.mark.parametrize("company,payload", [
