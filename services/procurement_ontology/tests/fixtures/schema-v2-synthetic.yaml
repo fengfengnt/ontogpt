@@ -1,0 +1,47 @@
+# 专为离线验收编写的模拟材料；不是客户原文、合同或正式业务规则。
+simulated: true
+purpose: v2 缺项的人工预期取值、来源与适用范围校验；不代表模型自动提取结果。
+positive_cases:
+  - field: quotation_inclusions
+    company_id: test_buyer1
+    project_ref: SIM-BUYER-V2-001
+    stage: 最终报价
+    group: condition_templates
+    text: 【模拟验收资料】原装电源适配器、运输、安装调试均已包含在本项目最终含税报价中，不得另行加价。
+    value: 原装电源适配器、运输、安装调试均已包含在本项目最终含税报价中，不得另行加价。
+  - field: brand_pool_membership
+    company_id: test_buyer1
+    project_ref: SIM-BUYER-V2-001
+    stage: 项目品牌池确认
+    group: term_definitions
+    text: 【模拟验收资料】本项目品牌入围池为模拟品牌A、模拟品牌B；新增或移除品牌须由本项目采购负责人审批。
+    value: 本项目品牌入围池为模拟品牌A、模拟品牌B；新增或移除品牌须由本项目采购负责人审批。
+  - field: volume_discount_tier
+    company_id: test_buyer1
+    project_ref: SIM-BUYER-V2-001
+    stage: 报价磋商
+    group: condition_templates
+    text: 【模拟验收资料】本项目单批采购达到50台时，可由采购部另行谈判专项折扣；具体折扣率以书面确认结果为准，不预设降价比例。
+    value: 本项目单批采购达到50台时，可由采购部另行谈判专项折扣；具体折扣率以书面确认结果为准，不预设降价比例。
+  - field: late_payment_penalty_text
+    company_id: test_supplier1
+    project_ref: SIM-SUPPLIER-V2-001
+    stage: 合同付款条款
+    group: pricing_strategies
+    text: 【模拟验收资料】采购方逾期支付已到期货款的，按逾期未付金额每日0.03%支付违约金，累计不超过逾期未付金额的5%；本条仅适用于逾期付款，不适用于交货延期。
+    value: 采购方逾期支付已到期货款的，按逾期未付金额每日0.03%支付违约金，累计不超过逾期未付金额的5%；本条仅适用于逾期付款，不适用于交货延期。
+
+# 以下为待模型联调/人工核对的反例预期，不是当前程序自动语义识别已通过的证明。
+negative_review_cases:
+  - field: quotation_inclusions
+    text: 【模拟反例】运输及安装服务的费用由双方另行协商。
+    expected_review: 不能认定运输或安装已包含在报价中，也不能认定不得加价。
+  - field: brand_pool_membership
+    text: 【模拟反例】市场上常见模拟品牌A、模拟品牌B。
+    expected_review: 市场品牌列举不能认定为本项目入围池。
+  - field: volume_discount_tier
+    text: 【模拟反例】供应商须有单批次不少于50台的成功交付案例。
+    expected_review: 资格案例规模不能认定为本项目折扣门槛。
+  - field: late_payment_penalty_text
+    text: 【模拟反例】供应商逾期交货，每日按未交货金额的0.03%承担违约金；另有条款仅写逾期每日0.3%，上限10%，未说明适用对象。
+    expected_review: 交货违约及适用对象不明的违约条款均不能直接填入逾期付款字段。

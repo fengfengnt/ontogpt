@@ -114,3 +114,35 @@ def test_v2_rejects_invalid_types_and_other_enterprise_fields(company, payload):
     binding = load_registered_template(company, "computer", "v2")
     with pytest.raises(ValidationError):
         binding.python_class.model_validate(payload)
+
+
+@pytest.mark.parametrize("field", [
+    "quotation_inclusions", "brand_pool_membership", "volume_discount_tier", "late_payment_penalty_text",
+])
+def test_supplemental_simulated_samples_keep_values_evidence_and_scope(field):
+    fixture = ROOT / "services/procurement_ontology/tests/fixtures/schema-v2-synthetic.yaml"
+    samples = yaml.safe_load(fixture.read_text(encoding="utf-8"))
+    assert samples["simulated"] is True
+    case = next(case for case in samples["positive_cases"] if case["field"] == field)
+    binding = load_registered_template(case["company_id"], "computer", "v2")
+    text, quote = case["text"], case["value"]
+    start = text.index(quote)
+    row = {field: quote, "evidence_quote": quote, "evidence_start": start, "evidence_end": start + len(quote),
+           "project_ref": case["project_ref"], "stage": case["stage"]}
+    extracted = binding.python_class.model_validate({case["group"]: [row]})
+    source = SourceRevision(id=field, scope_id=case["company_id"], text=text, simulated=True,
+                            sha256=hashlib.sha256(text.encode()).hexdigest(), submitted_by="synthetic-test")
+    run = ExtractionRun(id=field, scope_id=source.scope_id, revision_id=source.id, category_key="computer",
+                        schema_version="v2", yaml_sha256=binding.yaml_sha256, python_sha256=binding.python_sha256,
+                        requested_by="synthetic-test", batch_id=field)
+    candidates, suggestions = normalize_candidates(binding, source, run, extracted, "simulated-computer")
+    assert not suggestions and len(candidates) == 1
+    candidate = candidates[0]
+    assert candidate.status == "PENDING_REVIEW"
+    assert candidate.item.properties[field] == quote
+    assert candidate.item.simulated is True
+    assert candidate.item.schema_version == "v2"
+    assert candidate.item.scope.project_ref == case["project_ref"]
+    assert candidate.item.scope.stage == case["stage"]
+    assert len(candidate.item.source_spans) == 1
+    candidate.item.source_spans[0].validate_against(source)
